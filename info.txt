@@ -1,0 +1,31 @@
+-->Features
+   --->Authetication
+   --->Chat wit Ai
+   --->Message Storage
+   --->Ai with internet research feature
+
+
+--->Data Modeling
+    --->User
+        --->username
+        --->userid
+        --->email
+        --->passwrod
+        --->isVerified
+        --->createdAt
+        --->updatedAt
+
+    --->Chat
+        --->id
+        --->User
+        --->title
+        --->createdAt
+        --->updatedAt      
+
+
+    --->Message
+        --->id
+        --->Chat
+        --->content
+        --->role:[user,Ai]
+        --->timestamp    
