@@ -54,7 +54,6 @@ const userSchema = new Schema(
 userSchema.pre("save", async function (next) {
       if (!this.isModified("password")) return next();
       this.password = await bcrypt.hash(this.password, 12);
-      next();
 });
 
 // ─── Instance Methods ─────────────────────────────────────────────────────────
@@ -68,6 +67,6 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
       return await bcrypt.compare(candidatePassword, this.password);
 };
 
-const userModel = mongoose.model("User", userSchema);
+const userModel = mongoose.model("Users", userSchema);
 
 export default userModel;

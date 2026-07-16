@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import authRouter from "./routes/auth.routes.js";
 
 // Initialize the Express application
 const app = express();
@@ -26,7 +27,7 @@ app.use(cookieParser());
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 // TODO: Import and mount your route modules here
-// Example: app.use("/api/v1/users", userRouter);
+app.use("/api/auth", authRouter);
 
 // ─── Health Check Route ───────────────────────────────────────────────────────
 /**
