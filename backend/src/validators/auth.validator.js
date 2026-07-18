@@ -5,7 +5,7 @@ import { body, validationResult } from "express-validator";
  * Each rule uses express-validator's `body()` to validate specific fields from req.body.
  * The last entry in the array is an inline middleware that collects any validation errors
  * and returns a 400 response if any exist — so no separate validate function is needed.
- */
+*/
 export const registerValidator = [
       // Validate 'username': must be a non-empty string with max 60 characters
       body("username")
@@ -53,3 +53,27 @@ export const registerValidator = [
             next();
       },
 ];
+
+
+export const loginValidator = [
+
+      body("email").trim().notEmpty().withMessage("Email is required").isEmail().
+            withMessage("Please provide a valid email address").normalizeEmail(),
+
+      body("password").notEmpty().withMessage("Password is required").isLength({ min: 5, max: 15 }).
+            withMessage("Password must be between 5 and 15 characters long"),
+
+      (req, res, next) => {
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()) {
+                  return res.status(400).json({
+                        sucess: false,
+                        message: "Validation Failed",
+                        data: errors
+                  })
+            }
+            next()
+      }
+
+]
