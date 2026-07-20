@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { registerValidator } from "../validators/auth.validator.js";
-import { register, verifyEmail } from "../controllers/auth.controller.js";
+import { register, verifyEmail, resendVerificationEmail } from "../controllers/auth.controller.js";
 import { loginValidator } from "../validators/auth.validator.js";
 import { loginController, getMe } from "../controllers/auth.controller.js";
 import { authUser } from "../middlewares/auth.middleware.js";

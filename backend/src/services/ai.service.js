@@ -7,7 +7,7 @@ const model = new ChatGroq({
 });
 
 export async function testAi() {
-      model.invoke("what is an Ai explain in not more than 50 words").then((response) => {
+      model.invoke("hey").then((response) => {
             console.log('server is running fine', response.content);
       }).catch((err) => {
             console.log('Error', err);

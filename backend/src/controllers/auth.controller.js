@@ -43,7 +43,10 @@ export async function register(req, res) {
       res.status(201).json({
             message: "User registered successfully",
             success: true,
-            data: user
+            data: {
+                  username: user.username,
+                  email: user.email,
+            }
       })
 
 }
@@ -80,6 +83,7 @@ export async function verifyEmail(req, res) {
                   <p>Hi ${user.username} welcome to perplexity</p>
                   <p>Your account has been verified successfully</p>
                   <a href="http://localhost:3000/login">Login Here</a>
+                  <p> having problem resend link?</p>
             `
 
             return res.send(html);
@@ -89,6 +93,55 @@ export async function verifyEmail(req, res) {
                   message: "Invalid token",
                   success: false,
                   err: "invalid token"
+            })
+      }
+}
+
+/** 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ * @description resend the account verification link again
+*/
+export async function resendVerificationEmail(req, res) {
+      try {
+
+            const { email } = req.query;
+
+            if (!email) {
+                  return res.status(400).json({
+                        message: "Email is required",
+                        success: false,
+                        err: "email is required"
+                  })
+            }
+
+            const user = await userModel.findOne({ email });
+
+            if (!user) {
+                  return res.status(404).json({
+                        message: "user not found",
+                        success: false,
+                        err: "user not found"
+                  })
+            }
+
+
+            if (user.verified) {
+                  return res.status(400).json({
+                        message: "account already verified please loing to continue",
+                        success: false,
+                        err: "account already verified"
+                  })
+            }
+
+
+            return verifyEmail(req, res);
+
+      } catch (err) {
+            res.status(500).json({
+                  message: "Unexpected Error Accours!",
+                  success: false,
+                  err: err
             })
       }
 }

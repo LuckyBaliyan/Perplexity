@@ -26,7 +26,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
-// TODO: Import and mount your route modules here
 app.use("/api/auth", authRouter);
 
 // ─── Health Check Route ───────────────────────────────────────────────────────
