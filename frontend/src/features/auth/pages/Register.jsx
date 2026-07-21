@@ -1,6 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
+
+import { VscAccount } from "react-icons/vsc";
+import useReveal from "../../animations/hooks/useReveal";
 
 /**
  * Register
@@ -72,6 +75,13 @@ export default function Register() {
       const [intelligenceId, setIntelligenceId] = useState("");
       const [securityPhrase, setSecurityPhrase] = useState("");
 
+      const registerCardRef = useRef(null);
+      /**
+       * @description Register UI Animation
+       * @returns React Component
+      */
+      useReveal(registerCardRef, { delay: 0, yfrom: 40, yto: 0, duration: 1 });
+
       const strength = useMemo(() => strengthOf(securityPhrase), [securityPhrase]);
       const strengthLabel = ["", "WEAK ENTROPY", "MODERATE ENTROPY", "SECURE ENTROPY"][strength];
 
@@ -82,30 +92,38 @@ export default function Register() {
 
       return (
             <div className="min-h-screen w-full bg-black relative overflow-hidden flex flex-col font-sans">
-                  {/* ambient background layers, consistent with Login */}
+                  {/* ambient background layers */}
                   <div className="pointer-events-none absolute inset-0">
+                        {/* soft overall vignette so the center lifts slightly off pure black */}
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(30,35,50,0.35)_0%,_rgba(0,0,0,0)_55%)]" />
-                        <div className="absolute top-[16%] left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-[#9df800]/5 blur-[110px]" />
-                        <div className="absolute top-[64%] left-[30%] h-[380px] w-[380px] rounded-full bg-[#9df800]/5 blur-[100px]" />
-                        <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-[#8b90a0]/5 blur-[120px]" />
+
+                        {/* faint indigo glow seated behind the card/header */}
+                        <div className="absolute top-[16%] left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[110px]" />
+
+                        {/* green glow bleeding out from behind the card's bottom-left corner */}
+                        <div className="absolute top-[64%] left-[30%] h-[380px] w-[380px] rounded-full bg-lime-500/10 blur-[100px]" />
+
+                        {/* subtle wash to lift the top-right corner slightly off pure black */}
+                        <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-slate-500/5 blur-[120px]" />
                   </div>
 
                   {/* main card */}
-                  <div className="relative z-10 flex-1 flex items-center justify-center px-4">
-                        <div className="w-full max-w-md rounded-[0.25rem] border border-[#414755]/40 bg-[#121414]/90 backdrop-blur-2xl p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
+                  <div ref={registerCardRef} className="relative z-10 flex-1 flex items-center justify-center px-4">
+                        <div className="w-full max-w-md rounded-xl  bg-[#121414]/90 backdrop-blur-2xl p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
                               {/* header row */}
-                              <div className="flex items-start justify-between">
-                                    <div>
-                                          <h1 className="text-2xl font-bold tracking-[-0.01em] text-[#e2e2e2]">
-                                                Register New Identity
+                              <div className="flex items-center justify-between">
+                                    {/* logo */}
+                                    <div className="relative flex justify-center mb-6">
+                                          <VscAccount className="w-15 h-15 text-[#9df800]" />
+                                    </div>
+                                    <div className="w-full text-center">
+                                          <h1 className="text-3xl font-bold tracking-[-0.01em] text-[#e2e2e2]">
+                                                Create Your Account
                                           </h1>
-                                          <p className="mt-2 text-sm text-[#c1c6d7]">
-                                                Initialize your neural interface with the NeonAI ecosystem.
+                                          <p className="m-4 mt-2 text-sm text-[#c1c6d7]">
+                                                Join the Perplexor ecosystem and experience the future of intelligence.
                                           </p>
                                     </div>
-                                    <span className="mt-1 text-[#8b90a0]">
-                                          <BoltMarkIcon />
-                                    </span>
                               </div>
 
                               {/* form */}
@@ -164,19 +182,19 @@ export default function Register() {
                                           type="submit"
                                           variant="primary"
                                           className="mt-2 !rounded-lg !bg-[#9df800] hover:!bg-[#8bdc00] !text-[#102000]
-                         !shadow-[0_0_30px_rgba(157,248,0,0.35)] !font-mono !text-sm
-                         !tracking-[0.08em] !py-3.5"
+                                          !shadow-[0_0_30px_rgba(157,248,0,0.35)] !font-mono !text-sm
+                                          !tracking-[0.08em] !py-3.5"
                                     >
-                                          <span className="uppercase">Forge Identity</span>
+                                          <span className="uppercase">Create Account</span>
                                           <BoltIcon />
                                     </Button>
                               </form>
 
                               {/* footer link */}
                               <p className="mt-6 text-center text-sm text-[#c1c6d7]">
-                                    Already synthesized?{" "}
-                                    <Button variant="link" type="button" className="!text-[#adc6ff] hover:!text-[#d8e2ff]">
-                                          Login with existing credentials
+                                    Already have an account?{" "}
+                                    <Button variant="link" type="button" className="!text-[#adc6ff] hover:!text-[#d8e2ff]" url="login">
+                                          Log In
                                     </Button>
                               </p>
                         </div>

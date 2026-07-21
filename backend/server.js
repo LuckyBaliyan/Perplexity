@@ -1,7 +1,6 @@
 import "dotenv/config";
 import app from "./src/app.js";
 import connectDB from "./src/config/db.js";
-import { testAi } from "./src/services/ai.service.js";
 
 // ─── Environment Variables ────────────────────────────────────────────────────
 
@@ -10,8 +9,6 @@ import { testAi } from "./src/services/ai.service.js";
  * Falls back to 3000 if PORT is not defined in the environment.
 */
 const PORT = process.env.PORT || 3000;
-
-testAi();
 
 // ─── Database + Server Startup ────────────────────────────────────────────────
 

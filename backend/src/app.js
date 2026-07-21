@@ -1,6 +1,8 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.routes.js";
+import morgan from "morgan";
+import cors from "cors";
 
 // Initialize the Express application
 const app = express();
@@ -12,6 +14,21 @@ const app = express();
  * Makes req.body available as a parsed JS object when Content-Type is application/json.
 */
 app.use(express.json());
+
+/**
+ * Enables Cross-Origin Resource Sharing (CORS).
+ * Allows the frontend (http://localhost:5173) to make requests to the backend.
+*/
+app.use(cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+}));
+
+/**
+ * Logs HTTP requests to the console in a developer-friendly format.
+*/
+app.use(morgan("dev"));
 
 /**
  * Parses incoming requests with URL-encoded payloads (form submissions).

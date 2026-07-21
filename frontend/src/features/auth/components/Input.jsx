@@ -39,7 +39,7 @@ export default function Input({
                               <span className="shrink-0 text-slate-500">{icon}</span>
                         )}
                         <input
-                              className={`w-full bg-transparent text-sm text-gray-200 placeholder:text-gray-500
+                              className={`w-full h-full bg-transparent text-sm text-gray-200 placeholder:text-gray-500
                       placeholder:font-mono focus:outline-none ${inputClassName}`}
                               {...rest}
                         />

@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Checkbox from "../components/CheckBox";
 import { IoMdLogIn } from "react-icons/io";
 import { RiLoginCircleFill } from "react-icons/ri";
+import useReveal from "../../animations/hooks/useReveal";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router";
 
 /**
  * @description 
@@ -43,6 +46,28 @@ export default function LoginPage() {
       const [showKey, setShowKey] = useState(false);
       const [persistNode, setPersistNode] = useState(false);
 
+      const loginCardRef = useRef(null);
+
+      const navigate = useNavigate();
+
+      /**
+       * using custom hook useReveal to reveal the login card with a delay of 0
+       * @param {RefObject} ref - the ref of the element to reveal
+       * @param {Number} delay - the delay in milliseconds
+       * @returns {void}
+      */
+      useReveal(loginCardRef, { delay: 0, yfrom: 20, yto: -30, duration: 1 });
+
+      /**
+       * using auth custom hook to handle the login request
+       * @returns {void}
+      */
+      const { handleLogin } = useAuth();
+
+      /**
+       * Cleans up the form state
+       * @returns {void}
+      */
       const cleanUp = () => {
             setEmail("");
             setPassword("");
@@ -50,15 +75,17 @@ export default function LoginPage() {
             setPersistNode(false);
       }
 
-      const handleSubmit = (e) => {
+      const handleSubmit = async (e) => {
             e.preventDefault();
-            // Wire this up to your auth flow
-            console.log({ email, password, persistNode });
+
+            await handleLogin({ email, password });
             cleanUp();
+
+            navigate("/Dashboard");
       };
 
       return (
-            <div className="min-h-screen w-full bg-[#0c0c0c] relative overflow-hidden flex flex-col">
+            <div className="h-screen w-full bg-black relative overflow-hidden flex flex-col">
                   {/* ambient background layers */}
                   <div className="pointer-events-none absolute inset-0">
                         {/* soft overall vignette so the center lifts slightly off pure black */}
@@ -85,7 +112,7 @@ export default function LoginPage() {
                   </div>
 
                   {/* main card */}
-                  <div className="relative z-10 flex-1 flex items-center justify-center px-4">
+                  <div ref={loginCardRef} className="relative z-10 flex-1 flex items-center justify-center px-4">
                         <div className="relative w-full max-w-md rounded-xl bg-[#121414] backdrop-blur-xl p-10 shadow-[0_0_60px_rgba(0,0,0,0.6)] overflow-hidden">
 
                               {/* logo */}
@@ -98,7 +125,7 @@ export default function LoginPage() {
                                     Perplexor
                               </h1>
                               <p className="relative mt-2 text-center text-xs font-mono tracking-[0.2em] text-slate-400">
-                                    PROTOCOL VERIFICATION REQUIRED
+                                    LOGIN TO YOUR ACCOUNT
                               </p>
 
                               {/* form */}
@@ -125,16 +152,16 @@ export default function LoginPage() {
 
                                     <div className="flex items-center justify-between -mt-1">
                                           <Checkbox
-                                                label="Persist Node"
+                                                label="Remember Me"
                                                 checked={persistNode}
                                                 onChange={(e) => setPersistNode(e.target.checked)}
                                           />
                                           <Button variant="link" type="button" className="text-sm">
-                                                Emergency Recovery
+                                                Forgot Password?
                                           </Button>
                                     </div>
 
-                                    <Button type="submit" variant="primary" icon={<RiLoginCircleFill />} className="mt-2">
+                                    <Button type="submit" variant="primary" icon={<RiLoginCircleFill />} className="mt-2  !shadow-[0_0_30px_rgba(75,142,255,0.35)]">
                                           Login
                                     </Button>
                               </form>
@@ -144,8 +171,8 @@ export default function LoginPage() {
 
                               {/* footer link */}
                               <p className="text-center text-sm text-slate-300">
-                                    New User?{" "}
-                                    <Button variant="link" type="button">
+                                    First Time Here?{" "}
+                                    <Button variant="link" type="button" url="register">
                                           Sign Up
                                     </Button>
                               </p>
@@ -154,7 +181,7 @@ export default function LoginPage() {
 
                   {/* bottom bar */}
                   <div className="relative z-10 flex items-center justify-between px-8 py-5 text-xs font-mono text-slate-500">
-                        <span>© 2024 NeonAI Systems</span>
+                        <span>© 2026 Perplexor Ai</span>
                         <span className="hidden sm:inline">Status: Operational &nbsp; V: 4.0.2-Alpha</span>
                         <div className="flex gap-6">
                               <span className="hover:text-slate-300 transition-colors cursor-pointer">PRIVACY PROTOCOL</span>
