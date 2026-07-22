@@ -1,8 +1,9 @@
 import "dotenv/config";
 import app from "./src/app.js";
 import connectDB from "./src/config/db.js";
+import { initSocket } from "./src/sockets/server.socket.js";
+import http from "http";
 
-// ─── Environment Variables ────────────────────────────────────────────────────
 
 /**
  * Reads the PORT from the .env file via dotenv.
@@ -10,7 +11,13 @@ import connectDB from "./src/config/db.js";
 */
 const PORT = process.env.PORT || 3000;
 
-// ─── Database + Server Startup ────────────────────────────────────────────────
+
+/**
+ * Creates an HTTP server and initializes the socket.io server.
+*/
+const httpServer = http.createServer(app);
+initSocket(httpServer);
+
 
 /**
  * Connects to MongoDB first, then starts the HTTP server.

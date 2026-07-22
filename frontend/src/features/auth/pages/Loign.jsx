@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { use, useRef, useState } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Checkbox from "../components/CheckBox";
@@ -6,7 +6,8 @@ import { IoMdLogIn } from "react-icons/io";
 import { RiLoginCircleFill } from "react-icons/ri";
 import useReveal from "../../animations/hooks/useReveal";
 import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
+import { useSelector } from "react-redux";
 
 /**
  * @description 
@@ -47,8 +48,10 @@ export default function LoginPage() {
       const [persistNode, setPersistNode] = useState(false);
 
       const loginCardRef = useRef(null);
-
       const navigate = useNavigate();
+
+      const user = useSelector(state => state.auth.user);
+      const loading = useSelector(state => state.auth.loading);
 
       /**
        * using custom hook useReveal to reveal the login card with a delay of 0
@@ -83,6 +86,16 @@ export default function LoginPage() {
 
             navigate("/Dashboard");
       };
+
+
+      /**
+       * if user is already logged in, redirect to dashboard
+       * @returns {void}
+       * replace attribute is used to replace the current history entry instead of adding a new one
+      */
+      if (!loading && user) {
+            return <Navigate to="/Dashboard" replace />
+      }
 
       return (
             <div className="h-screen w-full bg-black relative overflow-hidden flex flex-col">
