@@ -25,7 +25,7 @@ initSocket(httpServer);
  * If the DB connection fails, connectDB() calls process.exit(1) internally.
 */
 connectDB().then(() => {
-      app.listen(PORT, () => {
+      httpServer.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
       });
 });
