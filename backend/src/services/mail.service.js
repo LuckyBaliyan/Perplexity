@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 transporter.verify()
       .then(() => { console.log("Email Transporter is ready to send emails") })
-      .catch((err) => { console.error("Email Transporter verification is failed!") });
+      .catch((err) => { console.error("Email Transporter verification is failed!", err.message) });
 
 /**
  * function to send mail for account activation from SMTP server to client email address with
