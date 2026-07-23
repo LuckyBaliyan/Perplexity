@@ -31,14 +31,6 @@ const chatSchema = new Schema(
       }
 );
 
-// ─── Indexes ──────────────────────────────────────────────────────────────────
-
-/**
- * Compound index to efficiently fetch a user's non-archived chats
- * sorted by most recently active, which is the default history view.
-*/
-chatSchema.index({ user: 1 });
-
 const chatModel = mongoose.model("Chats", chatSchema);
 
 export default chatModel;
