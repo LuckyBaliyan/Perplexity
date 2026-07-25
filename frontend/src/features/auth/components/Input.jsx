@@ -38,7 +38,7 @@ export default function Input({
                         {icon && (
                               <span className="shrink-0 text-slate-500">{icon}</span>
                         )}
-                        <input
+                        <input required
                               className={`w-full h-full bg-transparent text-sm text-gray-200 placeholder:text-gray-500
                       placeholder:font-mono focus:outline-none ${inputClassName}`}
                               {...rest}

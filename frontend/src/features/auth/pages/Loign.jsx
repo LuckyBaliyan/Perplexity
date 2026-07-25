@@ -1,4 +1,4 @@
-import React, { use, useRef, useState } from "react";
+import React, { use, useRef, useState, useEffect } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Checkbox from "../components/CheckBox";
@@ -8,6 +8,7 @@ import useReveal from "../../animations/hooks/useReveal";
 import { useAuth } from "../hooks/useAuth";
 import { Navigate, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
+import { Link } from "react-router";
 
 /**
  * @description 
@@ -50,8 +51,11 @@ export default function LoginPage() {
       const loginCardRef = useRef(null);
       const navigate = useNavigate();
 
+      const [submitted, setSubmitted] = useState(false);
+
       const user = useSelector(state => state.auth.user);
       const loading = useSelector(state => state.auth.loading);
+      const error = useSelector(state => state.auth.error);
 
       /**
        * using custom hook useReveal to reveal the login card with a delay of 0
@@ -59,7 +63,7 @@ export default function LoginPage() {
        * @param {Number} delay - the delay in milliseconds
        * @returns {void}
       */
-      useReveal(loginCardRef, { delay: 0, yfrom: 20, yto: -30, duration: 1 });
+      useReveal(loginCardRef, { delay: 0, yfrom: 20, yto: 0, duration: 1 });
 
       /**
        * using auth custom hook to handle the login request
@@ -80,12 +84,30 @@ export default function LoginPage() {
 
       const handleSubmit = async (e) => {
             e.preventDefault();
-
+            setSubmitted(true);
             await handleLogin({ email, password });
             cleanUp();
-
-            navigate("/Dashboard");
       };
+
+
+      /**
+       * Effect that handles navigation after login attempt
+       * It runs only after the form has been submitted
+      */
+      useEffect(() => {
+
+            // Only run this effect after form submission
+            if (submitted) {
+
+                  if (error) {
+                        navigate("/undefined", { replace: true }); // Navigate to error page if login fails
+                  } else if (user) {
+                        navigate("/dashboard", { replace: true }); // Navigate to dashboard if login succeeds
+                  }
+
+            }
+
+      }, [user, error, submitted, navigate]);
 
 
       /**
@@ -94,7 +116,7 @@ export default function LoginPage() {
        * replace attribute is used to replace the current history entry instead of adding a new one
       */
       if (!loading && user) {
-            return <Navigate to="/Dashboard" replace />
+            return <Navigate to="/dashboard" replace />
       }
 
       return (
@@ -112,16 +134,6 @@ export default function LoginPage() {
 
                         {/* subtle wash to lift the top-right corner slightly off pure black */}
                         <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-slate-500/5 blur-[120px]" />
-                  </div>
-
-                  {/* top status pill */}
-                  <div className="relative z-10 flex justify-end p-6">
-                        <div className="flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/60 px-4 py-1.5">
-                              <span className="h-2 w-2 rounded-full bg-lime-400 shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
-                              <span className="text-xs font-mono tracking-widest text-slate-300">
-                                    GLOBAL CORE ONLINE
-                              </span>
-                        </div>
                   </div>
 
                   {/* main card */}
@@ -185,20 +197,8 @@ export default function LoginPage() {
                               {/* footer link */}
                               <p className="text-center text-sm text-slate-300">
                                     First Time Here?{" "}
-                                    <Button variant="link" type="button" url="register">
-                                          Sign Up
-                                    </Button>
+                                    <Link to="/register" className="text-[#9DF800] hover:underline">Sign Up</Link>
                               </p>
-                        </div>
-                  </div>
-
-                  {/* bottom bar */}
-                  <div className="relative z-10 flex items-center justify-between px-8 py-5 text-xs font-mono text-slate-500">
-                        <span>© 2026 Perplexor Ai</span>
-                        <span className="hidden sm:inline">Status: Operational &nbsp; V: 4.0.2-Alpha</span>
-                        <div className="flex gap-6">
-                              <span className="hover:text-slate-300 transition-colors cursor-pointer">PRIVACY PROTOCOL</span>
-                              <span className="hover:text-slate-300 transition-colors cursor-pointer">NEURAL TERMS</span>
                         </div>
                   </div>
             </div>

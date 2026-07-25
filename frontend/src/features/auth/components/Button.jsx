@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router";
 
 /**
  * Button
@@ -33,11 +32,9 @@ export default function Button({
 }) {
 
       const base = VARIANT_CLASSES[variant] || VARIANT_CLASSES.primary;
-      const navigate = useNavigate();
 
       return (
             <button
-                  onClick={() => navigate(`/${rest?.url}`)}
                   className={`inline-flex items-center cursor-pointer justify-center gap-2 ${base} ${className}`}
                   {...rest}
             >

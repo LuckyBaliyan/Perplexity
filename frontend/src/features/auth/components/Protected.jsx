@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { Navigate } from 'react-router-dom'
+import Loader from '../../shared/pages/Loader';
 
 /**
  * Protected component to protect routes
@@ -13,14 +14,12 @@ function Protected({ children }) {
 
       if (loading) {
             return (
-                  <div className="h-screen w-full flex items-center justify-center">
-                        <h1 className="text-4xl text-white">Loading...</h1>
-                  </div>
+                  <Loader />
             )
       }
 
       if (!user) {
-            return <Navigate to="/login" />
+            return <Navigate to="/login" replace />
       }
 
       return children;

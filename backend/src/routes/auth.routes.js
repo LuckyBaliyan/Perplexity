@@ -41,4 +41,11 @@ authRouter.get("/get-me", authUser, getMe);
 */
 authRouter.get("/verify-email", verifyEmail);
 
+/**
+ * @route GET /api/auth/resend-verification-email
+ * @description Resend verification email to user
+ * @access Public
+*/
+authRouter.get("/resend-verification-email", resendVerificationEmail);
+
 export default authRouter;

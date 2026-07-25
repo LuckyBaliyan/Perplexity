@@ -8,6 +8,38 @@ import { sendEmail } from "../services/mail.service.js";
  * @param {import("express").Response} res
 */
 
+/**
+ * @description Signs a fresh verification token for a user and emails them
+ * the activation link. Shared by register() and resendVerificationEmail()
+ * so both paths always issue a real, current token.
+ * @param {{ username: string, email: string }} user
+ */
+async function sendVerificationEmail(user) {
+      const emailVerificationToken = jwt.sign(
+            { email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+      );
+
+      await sendEmail({
+            to: user.email,
+            subject: "Account Activation",
+            text: "Please verify your account by clicking on the link",
+            html: `
+                  <h1>Account Activation</h1>
+                  <p>Hi ${user.username} welcome to perplexity</p>
+                  <p>Please verify your account by clicking on the link</p>
+                  <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify email</a>
+            `
+      });
+}
+
+/**
+ * @description Controller for user registration
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+*/
+
 export async function register(req, res) {
 
       const { username, email, password } = req.body;
@@ -23,22 +55,7 @@ export async function register(req, res) {
 
       const user = await userModel.create({ username, email, password });
 
-      const emailVerificationToken = jwt.sign({
-            email: user.email,
-      }, process.env.JWT_SECRET);
-
-      await sendEmail({
-            to: email,
-            subject: "Account Activation",
-            text: "Please verify your account by clicking on the link",
-            html: `
-                  <h1>Account Activation</h1>
-                  <p>Hi ${username} welcome to perplexity</p>
-                  <p>Please verify your account by clicking on the link</p>
-                  <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify email</a>
-            `
-      });
-
+      await sendVerificationEmail(user);
 
       res.status(201).json({
             message: "User registered successfully",
@@ -82,7 +99,7 @@ export async function verifyEmail(req, res) {
                   <h1>Account Verified</h1>
                   <p>Hi ${user.username} welcome to perplexity</p>
                   <p>Your account has been verified successfully</p>
-                  <a href="http://localhost:3000/login">Login Here</a>
+                  <a href="http://localhost:5173/login">Login Here</a>
                   <p> having problem resend link?</p>
             `
 
@@ -134,8 +151,15 @@ export async function resendVerificationEmail(req, res) {
                   })
             }
 
+            await sendVerificationEmail(user);
 
-            return verifyEmail(req, res);
+            return res.status(200).json({
+                  message: "Verification email resent successfully",
+                  success: true,
+                  data: {
+                        email: user.email
+                  }
+            });
 
       } catch (err) {
             res.status(500).json({
@@ -156,9 +180,17 @@ export async function resendVerificationEmail(req, res) {
 export async function loginController(req, res) {
       const { email, password } = req.body;
 
-      const user = await userModel.findOne({ email });
+      const user = await userModel.findOne({ email }).select("+password");
 
-      const isPasswordMatch = user.comparePassword(password);
+      if (!user) {
+            return res.status(404).json({
+                  message: "user not found",
+                  success: false,
+                  err: "user not found"
+            });
+      }
+
+      const isPasswordMatch = await user.comparePassword(password);
 
       if (!isPasswordMatch) {
             return res.status(400).json({
@@ -172,7 +204,10 @@ export async function loginController(req, res) {
             return res.status(400).json({
                   message: "Account not verified",
                   success: false,
-                  err: "account not verified"
+                  err: "account not verified",
+                  data: {
+                        email: user.email
+                  }
             })
       }
 

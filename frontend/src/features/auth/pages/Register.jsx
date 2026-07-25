@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import { Link } from "react-router";
 
 import { VscAccount } from "react-icons/vsc";
 import useReveal from "../../animations/hooks/useReveal";
@@ -193,9 +194,7 @@ export default function Register() {
                               {/* footer link */}
                               <p className="mt-6 text-center text-sm text-[#c1c6d7]">
                                     Already have an account?{" "}
-                                    <Button variant="link" type="button" className="!text-[#adc6ff] hover:!text-[#d8e2ff]" url="login">
-                                          Log In
-                                    </Button>
+                                    <Link to="/login" className="text-[#D5DFFC] hover:underline">Log In</Link>
                               </p>
                         </div>
                   </div>

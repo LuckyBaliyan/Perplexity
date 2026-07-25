@@ -3,6 +3,7 @@ import Login from "../features/auth/pages/Loign";
 import Register from "../features/auth/pages/Register";
 import Dashboard from "../features/chats/pages/Dashboard";
 import Protected from "../features/auth/components/Protected";
+import Error from "../features/shared/pages/Error";
 
 export const router = createBrowserRouter([
       {
@@ -18,7 +19,11 @@ export const router = createBrowserRouter([
             element: <Register />
       },
       {
-            path: "/Dashboard",
+            path: "/dashboard",
             element: <Protected><Dashboard /></Protected>
       },
+      {
+            path: "*",
+            element: <Error />
+      }
 ]);
