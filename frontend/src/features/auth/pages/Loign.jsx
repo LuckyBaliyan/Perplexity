@@ -9,6 +9,7 @@ import { useAuth } from "../hooks/useAuth";
 import { Navigate, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import { Link } from "react-router";
+import Loader from "../../shared/pages/Loader";
 
 /**
  * @description 
@@ -98,16 +99,22 @@ export default function LoginPage() {
 
             // Only run this effect after form submission
             if (submitted) {
-
-                  if (error) {
-                        navigate("/undefined", { replace: true }); // Navigate to error page if login fails
+                  if (error && error.message != "Account not verified") {
+                        alert(error.message);
+                  }
+                  else if (error && error.message === "Account not verified") {
+                        navigate("/verify-email", { replace: true }); // Navigate to error page if login fails
                   } else if (user) {
                         navigate("/dashboard", { replace: true }); // Navigate to dashboard if login succeeds
                   }
-
             }
 
       }, [user, error, submitted, navigate]);
+
+
+      if (loading) {
+            return <Loader />
+      }
 
 
       /**

@@ -22,6 +22,8 @@ export function useAuth() {
                   const data = await register({ email, username, password });
                   dispatch(setUser(data?.user));
 
+                  return data;
+
             } catch (error) {
 
                   dispatch(setError(error?.response?.data || "Unexpected Error happend!"));

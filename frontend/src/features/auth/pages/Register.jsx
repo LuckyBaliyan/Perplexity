@@ -1,10 +1,13 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
-import { Link } from "react-router";
+import { Link, useNavigate, Navigate } from "react-router";
 
 import { VscAccount } from "react-icons/vsc";
 import useReveal from "../../animations/hooks/useReveal";
+import { useAuth } from "../hooks/useAuth.js";
+import { useSelector } from "react-redux";
+import Loader from "../../shared/pages/Loader.jsx";
 
 /**
  * Register
@@ -72,9 +75,9 @@ function strengthOf(value) {
  */
 
 export default function Register() {
-      const [fullName, setFullName] = useState("");
-      const [intelligenceId, setIntelligenceId] = useState("");
-      const [securityPhrase, setSecurityPhrase] = useState("");
+      const [username, setUserName] = useState("");
+      const [email, setEmail] = useState("");
+      const [password, setPassword] = useState("");
 
       const registerCardRef = useRef(null);
       /**
@@ -83,13 +86,48 @@ export default function Register() {
       */
       useReveal(registerCardRef, { delay: 0, yfrom: 40, yto: 0, duration: 1 });
 
-      const strength = useMemo(() => strengthOf(securityPhrase), [securityPhrase]);
+      const strength = useMemo(() => strengthOf(password), [password]);
       const strengthLabel = ["", "WEAK ENTROPY", "MODERATE ENTROPY", "SECURE ENTROPY"][strength];
 
-      const handleSubmit = (e) => {
+      const user = useSelector(state => state.auth.user);
+      const loading = useSelector(state => state.auth.loading);
+      const error = useSelector(state => state.auth.error);
+      const navigate = useNavigate();
+
+      const { handleRegister } = useAuth();
+
+      const cleanUp = () => {
+            setUserName("");
+            setEmail("");
+            setPassword("");
+            setSubmitted(false);
+      }
+
+
+      const handleSubmit = async (e) => {
             e.preventDefault();
-            console.log({ fullName, intelligenceId, securityPhrase });
+            const data = await handleRegister({
+                  username,
+                  email,
+                  password,
+            });
+
+            if (data.success) {
+                  alert(data.message + `Please verify your account via link send 
+                        on registered email! before logging in!`);
+                  cleanUp();
+                  navigate("/login", { replace: true });
+            }
       };
+
+      if (loading) {
+            return <Loader />
+      }
+
+      if (!loading && user) {
+            return <Navigate to="/dashboard" replace />
+      }
+
 
       return (
             <div className="min-h-screen w-full bg-black relative overflow-hidden flex flex-col font-sans">
@@ -130,34 +168,34 @@ export default function Register() {
                               {/* form */}
                               <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
                                     <Input
-                                          label="Full Name"
+                                          label="Username"
                                           icon={<UserIcon />}
                                           placeholder="Johnathan Doe"
-                                          value={fullName}
-                                          onChange={(e) => setFullName(e.target.value)}
+                                          value={username}
+                                          onChange={(e) => setUserName(e.target.value)}
                                           className="[&>label]:font-mono [&>label]:text-[11px] [&>label]:tracking-[0.1em] [&>label]:text-[#c1c6d7]"
                                           inputClassName="!text-[#e2e2e2]"
                                     />
 
                                     <Input
-                                          label="Intelligence ID"
+                                          label="Email Address"
                                           icon={<AtIcon />}
                                           type="email"
                                           placeholder="neural@neonai.systems"
-                                          value={intelligenceId}
-                                          onChange={(e) => setIntelligenceId(e.target.value)}
+                                          value={email}
+                                          onChange={(e) => setEmail(e.target.value)}
                                           className="[&>label]:font-mono [&>label]:text-[11px] [&>label]:tracking-[0.1em] [&>label]:text-[#c1c6d7]"
                                           inputClassName="!text-[#e2e2e2]"
                                     />
 
                                     <div className="flex flex-col gap-2">
                                           <Input
-                                                label="Security Phrase"
+                                                label="Password"
                                                 icon={<LockIcon />}
                                                 type="password"
                                                 placeholder="••••••••••••"
-                                                value={securityPhrase}
-                                                onChange={(e) => setSecurityPhrase(e.target.value)}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 className="[&>label]:font-mono [&>label]:text-[11px] [&>label]:tracking-[0.1em] [&>label]:text-[#c1c6d7]"
                                                 inputClassName="!text-[#e2e2e2] tracking-widest"
                                           />
