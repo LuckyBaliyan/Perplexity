@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useChat } from '../hooks/useChat';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import {
       Plus,
       MessageSquare,
@@ -31,6 +32,7 @@ function Dashboard() {
 
       const hRef = useRef(null);
       const inpRef = useRef(null);
+      const navigate = useNavigate();
 
       useReveal(hRef, { delay: 0.1, yfrom: 20, yto: 0, duration: 2, opacityFrom: 0, opacityTo: 1 });
       useReveal(inpRef, { delay: 0.8, yfrom: 20, yto: 0, duration: 1, opacityFrom: 0, opacityTo: 1 });
@@ -62,6 +64,7 @@ function Dashboard() {
                         className={`
                               fixed md:static inset-y-0 left-0 z-50
                               w-[260px] md:w-[280px] shrink-0
+                              h-full
                               bg-[#0c0f0f]/95 md:bg-[#0c0f0f] backdrop-blur-xl md:backdrop-blur-none
                               border-r border-[#282a2b]
                               flex flex-col
@@ -73,7 +76,7 @@ function Dashboard() {
 
                         {/* Logo + close (mobile) */}
                         <div className="flex items-center justify-between px-5 py-5">
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3" onClick={() => navigate("/")}>
                                     <div className="w-8 h-8 rounded-md bg-[#adc6ff] flex items-center justify-center text-[#002e69] font-bold text-sm">
                                           P
                                     </div>
@@ -150,10 +153,10 @@ function Dashboard() {
                   </aside>
 
                   {/* Main */}
-                  <div className="flex-1 flex flex-col min-w-0">
+                  <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
                         {/* Header */}
-                        <header className="flex items-center justify-between px-4 md:px-8 py-4 border-b border-[#282a2b]">
+                        <header className="flex items-center justify-between px-4 md:px-8 py-4 border-b border-[#282a2b] shrink-0">
 
                               <div className="flex items-center gap-4">
                                     <button
@@ -196,34 +199,59 @@ function Dashboard() {
                               </div>
                         </header>
 
-                        {/* Hero */}
-                        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
+                        {/* Hero — only this section scrolls */}
+                        <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6">
+                              <div className="min-h-full flex flex-col items-center justify-center py-8">
 
-                              <h1 ref={hRef}
-                                    className="text-center text-white font-semibold tracking-tight text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl"
-                                    style={{ fontFamily: 'Geist, sans-serif' }}
-                              >
-                                    How can I assist your{' '}
-                                    <span className="text-[#adc6ff]">Intelligence</span> today?
-                              </h1>
-
-                              <div className="w-full max-w-2xl mt-8 sm:mt-12">
-                                    <div ref={inpRef} className="flex items-center gap-2 sm:gap-3 bg-[#1a1c1c]/60 backdrop-blur-2xl border border-[#414755] rounded-lg px-4 sm:px-5 py-3 sm:py-4 shadow-[0_0_20px_rgba(173,198,255,0.05)] focus-within:border-[#adc6ff]/50 transition-colors">
-                                          <input
-                                                type="text"
-                                                placeholder="Initialize prompt..."
-                                                className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0"
-                                                style={{ fontFamily: 'JetBrains Mono, monospace' }}
-                                          />
-                                          <button
-                                                type="button"
-                                                className="shrink-0 cursor-pointer flex items-center justify-center w-9 h-9 rounded-md bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors"
+                                    <div className="relative flex justify-center items-center">
+                                          {/* Background Glow */}
+                                          <div
+                                                className="absolute inset-0 flex justify-center items-center pointer-events-none"
+                                                aria-hidden="true"
                                           >
-                                                <ArrowUp size={18} strokeWidth={2.5} className='hover:-translate-y-1 transition-all' />
-                                          </button>
-                                    </div>
-                              </div>
+                                                <div className="h-32 w-[90%] rounded-full bg-gradient-to-r from-[#adc6ff]/0 via-[#adc6ff]/35 to-[#adc6ff]/0 blur-3xl" />
+                                          </div>
 
+                                          <h1
+                                                ref={hRef}
+                                                className="relative z-10 text-center text-white font-semibold tracking-tight text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl"
+                                                style={{ fontFamily: "Geist, sans-serif" }}
+                                          >
+                                                How can I assist your{" "}
+                                                <span className="text-[#adc6ff] uppercase">
+                                                      <em>Intelligence</em>
+                                                </span>{" "}
+                                                today?
+                                          </h1>
+                                    </div>
+
+                                    <div className="w-full max-w-3xl mt-8 sm:mt-12">
+                                          <div ref={inpRef} className="flex items-center gap-2 sm:gap-3 bg-[#1a1c1c]/60 backdrop-blur-2xl 
+                                          border border-[#d8dff120] focus-within:border-[#d8e0f130] 
+                                          rounded-xl px-4 sm:px-5 py-3 sm:py-3">
+                                                <textarea
+                                                      placeholder="Initialize prompt..."
+                                                      rows={1}
+                                                      className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto"
+                                                      style={{ fontFamily: "JetBrains Mono, monospace" }}
+                                                      onInput={(e) => {
+                                                            e.target.style.height = "auto";
+                                                            const maxHeight = 200;
+                                                            const newHeight = Math.min(e.target.scrollHeight, maxHeight);
+                                                            e.target.style.height = `${newHeight}px`;
+                                                            e.target.style.overflowY = e.target.scrollHeight > maxHeight ? "auto" : "hidden";
+                                                      }}
+                                                />
+                                                <button
+                                                      type="button"
+                                                      className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors"
+                                                >
+                                                      <ArrowUp size={18} strokeWidth={2.5} className='hover:-translate-y-1 transition-all' />
+                                                </button>
+                                          </div>
+                                    </div>
+
+                              </div>
                         </div>
 
                   </div>
