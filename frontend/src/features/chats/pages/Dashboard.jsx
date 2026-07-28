@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useChat } from '../hooks/useChat';
 import { useNavigate } from 'react-router';
+import ReactMarkdown from 'react-markdown';
 import {
       Plus,
       MessageSquare,
@@ -22,6 +23,73 @@ import {
 } from 'lucide-react';
 import useReveal from '../../animations/hooks/useReveal';
 import { setCurrentChatId, setError } from '../slices/chat.slice';
+
+/**
+ * @description Renders code elements in Markdown, applying block styling for multiline code blocks and badge styling for inline code snippets.
+ * @param {Object} props - Props containing children content and CSS class name.
+ * @returns {React.ReactElement} Formatted code element.
+ */
+const RenderCode = ({ children, className }) => {
+      const isCodeBlock = className?.includes('language-') || (typeof children === 'string' && children.includes('\n'));
+      if (isCodeBlock) {
+            return <code className={className}>{children}</code>;
+      }
+      return (
+            <code className="bg-[#222525] text-[#adc6ff] px-1.5 py-0.5 rounded text-xs font-mono">
+                  {children}
+            </code>
+      );
+};
+
+/**
+ * @description Renders message content, formatting AI responses with ReactMarkdown and user responses in plain text.
+ * @param {Object} props - Component props containing content string and isUser boolean flag.
+ * @returns {React.ReactElement} Rendered message element.
+ */
+const RenderMessageContent = ({ content, isUser }) => {
+      if (isUser) {
+            return (
+                  <p className="whitespace-pre-wrap break-words pl-3">
+                        {content}
+                  </p>
+            );
+      }
+
+      return (
+            <div className="text-sm leading-relaxed break-words">
+                  <ReactMarkdown
+                        components={{
+                              p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+                              h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-3 mb-2">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-sm font-bold text-white mt-2 mb-1">{children}</h3>,
+                              ul: ({ children }) => <ul className="list-disc list-inside my-2 space-y-1 text-sm">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal list-inside my-2 space-y-1 text-sm">{children}</ol>,
+                              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                              pre: ({ children }) => (
+                                    <pre className="bg-[#0c0f0f] border border-[#282a2b] rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono text-[#e2e2e2]">
+                                          {children}
+                                    </pre>
+                              ),
+                              code: RenderCode,
+                              a: ({ href, children }) => (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#adc6ff] underline hover:text-white transition-colors">
+                                          {children}
+                                    </a>
+                              ),
+                              blockquote: ({ children }) => (
+                                    <blockquote className="border-l-2 border-[#adc6ff]/50 pl-3 my-2 text-[#8b90a0] italic">
+                                          {children}
+                                    </blockquote>
+                              )
+                        }}
+                  >
+                        {content}
+                  </ReactMarkdown>
+            </div>
+      );
+};
+
 
 /**
  * @description Dashboard — full chat UI wired to Redux + useChat hook.
@@ -83,6 +151,23 @@ function Dashboard() {
             }
       }, [currentMessages.length, isLoading]);
 
+      /**
+       * Format message time
+       * @param {Date} dateValue
+       * @returns {string}
+      */
+      const formatMessageTime = (dateValue) => {
+            if (!dateValue) return '';
+            const d = new Date(dateValue);
+            return d.toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+            });
+      };
+
       // ── Handlers ──────────────────────────────────────────────────────────────
       /**
        * handleSubmit — validates input, calls the hook with the live chatId
@@ -126,6 +211,27 @@ function Dashboard() {
       };
 
       /**
+       * @description Handles related questions click - Sets the message in the input field and focuses on it
+       * @param {*} question 
+      */
+      const handleRelatedQuestion = (question) => {
+
+            setInputValue(question);
+
+            requestAnimationFrame(() => {
+
+                  if (!textareaRef.current) return;
+
+                  textareaRef.current.style.height = "auto";
+                  textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+
+                  textareaRef.current.focus();
+
+            });
+
+      };
+
+      /**
        * handleSelectChat — loads a past chat by id and sets it as active.
        * If messages are already in Redux state, just switches — no network call.
        * @param {string} chatId
@@ -156,10 +262,16 @@ function Dashboard() {
        * Uses the first user message truncated to 40 chars.
        */
       const getChatTitle = (chat) => {
-            console.log(chat);
             const firstUserMsg = (chat.messages || []).find(m => m.role === 'user');
             const raw = chat.title || firstUserMsg?.content || 'New conversation';
-            return raw.length > 40 ? raw.slice(0, 40) + '…' : raw;
+            const clean = raw.trim()
+                  // strip markdown bold/italic markers anywhere (e.g. **xyz**, *xyz*)
+                  .replace(/\*\*/g, '')
+                  .replace(/\*/g, '')
+                  // strip wrapping quotes (straight or curly) if they wrap the whole string
+                  .replace(/^["'“‘]+|["'”’]+$/g, '')
+                  .trim();
+            return clean.length > 40 ? clean.slice(0, 40) + '…' : clean;
       };
 
       return (
@@ -363,6 +475,41 @@ function Dashboard() {
                                                       today?
                                                 </h1>
                                           </div>
+
+                                          {/* Input — lives here while no chat has started, no border/box, just floats under the heading */}
+                                          <div className="w-full max-w-2xl mt-8 sm:mt-10">
+                                                <div className="flex items-center gap-2 sm:gap-3 bg-[#1a1c1c]/60 backdrop-blur-2xl border border-[#2e3030] focus-within:border-[#adc6ff]/40 rounded-xl px-4 sm:px-5 py-3 transition-colors duration-200">
+                                                      <textarea
+                                                            ref={textareaRef}
+                                                            value={inputValue}
+                                                            onChange={(e) => setInputValue(e.target.value)}
+                                                            onKeyDown={handleKeyDown}
+                                                            placeholder="Initialize prompt..."
+                                                            rows={1}
+                                                            disabled={isLoading}
+                                                            className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
+                                                            style={{ fontFamily: "JetBrains Mono, monospace" }}
+                                                            onInput={(e) => {
+                                                                  e.target.style.height = "auto";
+                                                                  const maxHeight = 200;
+                                                                  const newHeight = Math.min(e.target.scrollHeight, maxHeight);
+                                                                  e.target.style.height = `${newHeight}px`;
+                                                                  e.target.style.overflowY = e.target.scrollHeight > maxHeight ? "auto" : "hidden";
+                                                            }}
+                                                      />
+                                                      <button
+                                                            type="button"
+                                                            onClick={handleSubmit}
+                                                            disabled={!inputValue.trim() || isLoading}
+                                                            className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                      >
+                                                            <ArrowUp size={18} strokeWidth={2.5} className="hover:-translate-y-1 transition-all" />
+                                                      </button>
+                                                </div>
+                                                <p className="text-center text-[10px] text-[#8b90a0] mt-2">
+                                                      Press <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Shift + Enter</kbd> for newline
+                                                </p>
+                                          </div>
                                     </div>
 
                               ) : (
@@ -373,48 +520,98 @@ function Dashboard() {
                                           {currentMessages.map((msg, idx) => {
                                                 const isUser = msg.role === 'user';
                                                 return (
-                                                      <div
-                                                            key={msg._id || idx}
-                                                            className={`flex items-end gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
-                                                      >
-
-                                                            {/* AI avatar — left side */}
-                                                            {!isUser && (
-                                                                  <div className="shrink-0 w-8 h-8 rounded-full bg-[#1e2020] border border-[#2e3030] flex items-center justify-center text-[#adc6ff]">
-                                                                        <Bot size={16} />
-                                                                  </div>
-                                                            )}
-
-                                                            {/* Bubble */}
+                                                      <>
                                                             <div
-                                                                  className={`
-                                                                        relative max-w-[78%] sm:max-w-[68%]
+                                                                  key={msg._id || idx}
+                                                                  className={`flex items-end gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
+                                                            >
+
+                                                                  {/* AI avatar — left side */}
+                                                                  {!isUser && (
+                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-[#1e2020] border border-[#2e3030] flex items-center justify-center text-[#adc6ff]">
+                                                                              <Bot size={16} />
+                                                                        </div>
+                                                                  )}
+
+                                                                  {/* Bubble */}
+                                                                  <div
+                                                                        className={`
+                                                                        group flex flex-col gap-2
+                                                                        relative max-w-[84%] sm:max-w-[88%]
                                                                         text-sm leading-relaxed px-4 py-3
                                                                         animate-[fadeSlideIn_0.25s_ease-out_both]
                                                                         ${isUser
-                                                                              ? 'bg-[#1e2020] border border-[#2e3030] rounded-2xl rounded-tr-sm shadow-lg'
-                                                                              : 'bg-[#161818] border border-[#222424] rounded-2xl rounded-tl-sm'
-                                                                        }
+                                                                                    ? 'bg-[#1e2020] border border-[#2e3030] rounded-2xl rounded-tr-sm shadow-lg'
+                                                                                    : 'bg-[#161818] border border-[#222424] rounded-2xl rounded-tl-sm'
+                                                                              }
                                                                   `}
-                                                                  style={{ fontFamily: isUser ? 'JetBrains Mono, monospace' : 'inherit' }}
-                                                            >
-                                                                  {/* Accent bar on user bubbles */}
+                                                                        style={{ fontFamily: isUser ? 'JetBrains Mono, monospace' : 'inherit' }}
+                                                                  >
+                                                                        {/* Accent bar on user bubbles */}
+                                                                        {isUser && (
+                                                                              <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#adc6ff]/60" />
+                                                                        )}
+                                                                        <RenderMessageContent content={msg.content} isUser={isUser} />
+                                                                        {/* Timestamp tooltip — hidden by default, fades in on bubble hover */}
+                                                                        <span
+                                                                              className={`
+                                                                              pointer-events-none absolute top-[100%]  mt-2 whitespace-nowrap
+                                                                              text-[10px] text-[#8b90a0]
+                                                                              opacity-0 group-hover:opacity-100
+                                                                              transition-opacity duration-150
+                                                                              ${isUser ? 'right-2' : 'left-2'}
+                                                                        `}
+                                                                              style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                                                                        >
+                                                                              {formatMessageTime(msg.createdAt)}
+                                                                        </span>
+                                                                  </div>
+
+                                                                  {/* User avatar — right side */}
                                                                   {isUser && (
-                                                                        <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#adc6ff]/60" />
+                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-[#adc6ff] flex items-center justify-center text-[#002e69] text-xs font-bold uppercase select-none">
+                                                                              {user?.username?.[0] ?? 'U'}
+                                                                        </div>
                                                                   )}
-                                                                  <p className={`whitespace-pre-wrap break-words ${isUser ? 'pl-3' : ''}`}>
-                                                                        {msg.content}
-                                                                  </p>
+
                                                             </div>
 
-                                                            {/* User avatar — right side */}
-                                                            {isUser && (
-                                                                  <div className="shrink-0 w-8 h-8 rounded-full bg-[#adc6ff] flex items-center justify-center text-[#002e69] text-xs font-bold uppercase select-none">
-                                                                        {user?.username?.[0] ?? 'U'}
-                                                                  </div>
-                                                            )}
+                                                            {/*follow-up Questions*/}
+                                                            {
+                                                                  msg.role === "ai" &&
+                                                                  msg.relatedQuestions?.length > 0 && (
+                                                                        <div className="mt-3 pl-11 flex flex-wrap gap-2">
 
-                                                      </div>
+                                                                              {msg.relatedQuestions.map((question, index) => (
+
+                                                                                    <button
+                                                                                          key={index}
+                                                                                          onClick={() => handleRelatedQuestion(question)}
+                                                                                          className="
+                                                                                          rounded-lg
+                                                                                          border
+                                                                                          border-[#2e3030]
+                                                                                          bg-[#161818]
+                                                                                          px-3.5
+                                                                                          py-1.5
+                                                                                          text-xs
+                                                                                          text-[#8b90a0]
+                                                                                          transition-colors
+                                                                                          duration-200
+                                                                                          cursor-pointer
+                                                                                          hover:border-[#adc6ff]/40
+                                                                                          hover:bg-[#1e2020]
+                                                                                          hover:text-[#e2e2e2]"
+                                                                                    >
+                                                                                          {question}
+                                                                                    </button>
+
+                                                                              ))}
+
+                                                                        </div>
+                                                                  )
+                                                            }
+                                                      </>
                                                 );
                                           })}
 
@@ -456,42 +653,44 @@ function Dashboard() {
 
                         </div>
 
-                        {/* ── Input bar — pinned at bottom ── */}
-                        <div className="shrink-0 px-4 sm:px-6 py-4 border-t border-[#282a2b]">
-                              <div className="max-w-3xl mx-auto">
-                                    <div className="flex items-center gap-2 sm:gap-3 bg-[#1a1c1c] border border-[#2e3030] focus-within:border-[#adc6ff]/40 rounded-xl px-4 sm:px-5 py-3 transition-colors duration-200">
-                                          <textarea
-                                                ref={textareaRef}
-                                                value={inputValue}
-                                                onChange={(e) => setInputValue(e.target.value)}
-                                                onKeyDown={handleKeyDown}
-                                                placeholder="Initialize prompt..."
-                                                rows={1}
-                                                disabled={isLoading}
-                                                className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
-                                                style={{ fontFamily: "JetBrains Mono, monospace" }}
-                                                onInput={(e) => {
-                                                      e.target.style.height = "auto";
-                                                      const maxHeight = 200;
-                                                      const newHeight = Math.min(e.target.scrollHeight, maxHeight);
-                                                      e.target.style.height = `${newHeight}px`;
-                                                      e.target.style.overflowY = e.target.scrollHeight > maxHeight ? "auto" : "hidden";
-                                                }}
-                                          />
-                                          <button
-                                                type="button"
-                                                onClick={handleSubmit}
-                                                disabled={!inputValue.trim() || isLoading}
-                                                className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                          >
-                                                <ArrowUp size={18} strokeWidth={2.5} className="hover:-translate-y-1 transition-all" />
-                                          </button>
+                        {/* ── Input bar — only appears once the chat has started. Sits flush at the bottom, no gradient/shadow divider, tighter padding so it doesn't eat vertical space ── */}
+                        {(currentMessages.length > 0 || isLoading) && (
+                              <div className="shrink-0 px-4 sm:px-6 pb-4 sm:pb-5">
+                                    <div className="max-w-3xl mx-auto">
+                                          <div className="flex select-none items-center gap-2 sm:gap-3 bg-[#1a1c1c] border border-[#2e3030] focus-within:border-[#adc6ff]/40 rounded-xl px-4 sm:px-5 py-2.5 transition-colors duration-200">
+                                                <textarea
+                                                      ref={textareaRef}
+                                                      value={inputValue}
+                                                      onChange={(e) => setInputValue(e.target.value)}
+                                                      onKeyDown={handleKeyDown}
+                                                      placeholder="Initialize prompt..."
+                                                      rows={1}
+                                                      disabled={isLoading}
+                                                      className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
+                                                      style={{ fontFamily: "JetBrains Mono, monospace" }}
+                                                      onInput={(e) => {
+                                                            e.target.style.height = "auto";
+                                                            const maxHeight = 200;
+                                                            const newHeight = Math.min(e.target.scrollHeight, maxHeight);
+                                                            e.target.style.height = `${newHeight}px`;
+                                                            e.target.style.overflowY = e.target.scrollHeight > maxHeight ? "auto" : "hidden";
+                                                      }}
+                                                />
+                                                <button
+                                                      type="button"
+                                                      onClick={handleSubmit}
+                                                      disabled={!inputValue.trim() || isLoading}
+                                                      className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                      <ArrowUp size={18} strokeWidth={2.5} className="hover:-translate-y-1 transition-all" />
+                                                </button>
+                                          </div>
+                                          <p className="text-center text-[10px] text-[#8b90a0] mt-1.5">
+                                                Press <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Shift + Enter</kbd> for newline
+                                          </p>
                                     </div>
-                                    <p className="text-center text-[10px] text-[#8b90a0] mt-2">
-                                          Press <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Shift + Enter</kbd> for newline
-                                    </p>
                               </div>
-                        </div>
+                        )}
 
                   </div>
 
