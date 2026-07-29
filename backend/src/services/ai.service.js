@@ -1,13 +1,17 @@
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { createAgent, tool } from "langchain";
 import { ChatGroq } from "@langchain/groq"
 import { ChatMistralAI } from "@langchain/mistralai";
+import { ChatOllama } from "@langchain/ollama"
+import * as z from "zod";
+import { scrapWeb } from "./web.service.js";
 
 /**
  * @description Model instance of Grok model from langchain
 */
 const grokModel = new ChatGroq({
-      //model: "llama-3.3-70b-versatile", // used for precise answers in deployement
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile", // used for precise answers in deployement
+      //model: "llama-3.1-8b-instant",
       apiKey: process.env.GROQ_API_KEY,
 });
 
@@ -21,6 +25,45 @@ const mistralModel = new ChatMistralAI({
 });
 
 /**
+ * @description Model instance of Ollama model from langchain
+*/
+const ollamaModel = new ChatOllama({
+      model: "gemma3",
+      apiKey: process.env.OLLAMA_API_KEY,
+});
+
+/**
+ * @description Tool to search the internet for relevant information
+ * @param {object} config 
+ * @param {Function} config.func - The function to use for searching the internet
+ * @param {object} config.toolConfig - The configuration for the tool
+ * @param {string} config.toolConfig.name - The name of the tool
+ * @param {string} config.toolConfig.description - The description of the tool
+ * @param {object} config.toolConfig.schema - The schema for the tool
+ * @returns {object} - The tool instance
+*/
+const searchWeb = tool(
+      scrapWeb,
+      {
+            name: "searchInternet",
+            description: `Use this tool to search the internet for relevant information from Internet`,
+            schema: z.object({
+                  query: z.string().describe("The search query to look up on the internet"),
+            })
+      }
+)
+
+
+const agent = createAgent({
+      model: mistralModel,
+      tools: [searchWeb],
+      systemMessage: new SystemMessage(`You are a helpful assistant that answers user queries based on the 
+            information you find on the internet`),
+})
+
+
+
+/**
  * Generates a response from the AI model based on the given message.
  * @param {*} message 
  * @returns 
@@ -28,12 +71,16 @@ const mistralModel = new ChatMistralAI({
 
 export async function generateResponse(messages) {
 
-      const response = await grokModel.invoke(messages.map(msg => {
-            if (msg.role === "user") return new HumanMessage(msg.content);
-            else if (msg.role === "ai") return new AIMessage(msg.content);
-      }));
+      const response = await agent.invoke({
+            messages: messages.map(msg => {
+                  if (msg.role === "user") return new HumanMessage(msg.content);
+                  else if (msg.role === "ai") return new AIMessage(msg.content);
+            })
+      });
 
-      return response.text;
+      console.log(response);
+
+      return response.messages[response.messages.length - 1].text;
 }
 
 /**

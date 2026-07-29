@@ -13,16 +13,21 @@ import React from "react";
  */
 const VARIANT_CLASSES = {
       primary:
-            "w-full rounded-sm bg-[#aec0ff]  text-indigo-950 " +
-            "font-semibold text-lg py-3 " +
+            "w-full rounded-sm bg-[var(--accent-primary)] text-[var(--text-inverse)] " +
+            "font-semibold text-lg py-3 hover:brightness-110 " +
             "transition-all active:scale-[0.99]",
       ghost:
-            "rounded-lg border border-slate-700/60 bg-slate-900/60 text-slate-200 " +
-            "font-medium px-4 py-2 hover:bg-slate-800/60 transition-colors",
+            "rounded-lg border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] " +
+            "font-medium px-4 py-2 hover:bg-[var(--bg-surface-hover)] transition-colors",
       link:
-            "text-lime-400 hover:text-lime-300 font-medium underline-offset-2 hover:underline transition-colors",
+            "text-[var(--accent-secondary)] hover:text-[var(--accent-secondary-hover)] font-medium underline-offset-2 hover:underline transition-colors",
 };
 
+/**
+ * @description Button — A customizable UI button component that renders styled actions using design system tokens.
+ * @param {Object} props - Button props including variant, icon, className, children, and HTML button attributes.
+ * @returns {React.ReactElement} Formatted button element.
+ */
 export default function Button({
       variant = "primary",
       icon,

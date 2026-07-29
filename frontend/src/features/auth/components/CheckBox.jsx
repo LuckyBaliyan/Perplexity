@@ -9,10 +9,15 @@ import React from "react";
  * - checked, onChange — standard controlled checkbox props
  * - className: string — extra classes appended to the wrapper
  */
+/**
+ * @description Checkbox — Interactive custom checkbox component styled with design system tokens.
+ * @param {Object} props - Checkbox props including label, checked state, onChange handler, and HTML input props.
+ * @returns {React.ReactElement} Formatted labeled checkbox element.
+ */
 export default function Checkbox({ label, checked, onChange, className = "", ...rest }) {
       return (
             <label
-                  className={`flex items-center gap-2 cursor-pointer select-none text-sm text-slate-300 ${className}`}
+                  className={`flex items-center gap-2 cursor-pointer select-none text-sm text-[var(--text-secondary)] ${className}`}
             >
                   <input
                         type="checkbox"
@@ -22,13 +27,13 @@ export default function Checkbox({ label, checked, onChange, className = "", ...
                         {...rest}
                   />
                   <span
-                        className="h-4 w-4 rounded-[4px] border border-slate-600 bg-slate-900/60
+                        className="h-4 w-4 rounded-[4px] border border-[var(--border-default)] bg-[var(--bg-card)]
                    flex items-center justify-center
-                   peer-checked:bg-indigo-300 peer-checked:border-indigo-300
+                   peer-checked:bg-[var(--accent-primary)] peer-checked:border-[var(--accent-primary)]
                    transition-colors"
                   >
                         {checked && (
-                              <svg viewBox="0 0 24 24" className="h-3 w-3 text-indigo-950" fill="none">
+                              <svg viewBox="0 0 24 24" className="h-3 w-3 text-[var(--text-inverse)]" fill="none">
                                     <path
                                           d="M5 13l4 4L19 7"
                                           stroke="currentColor"

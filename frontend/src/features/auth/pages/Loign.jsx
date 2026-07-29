@@ -19,7 +19,11 @@ import Loader from "../../shared/pages/Loader";
  *  }
 */
 
-// --- Icons (inline SVG, no external deps) ---
+/**
+ * @description FingerprintIcon — SVG icon component for identity/email inputs.
+ * @param {Object} props - Component properties.
+ * @returns {React.ReactElement} SVG fingerprint icon.
+ */
 const FingerprintIcon = (props) => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4" {...props}>
             <path d="M12 11a3 3 0 0 1 3 3v1a6 6 0 0 1-1.5 4" strokeLinecap="round" />
@@ -29,6 +33,11 @@ const FingerprintIcon = (props) => (
       </svg>
 );
 
+/**
+ * @description KeyIcon — SVG icon component for security/password inputs.
+ * @param {Object} props - Component properties.
+ * @returns {React.ReactElement} SVG key icon.
+ */
 const KeyIcon = (props) => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4" {...props}>
             <circle cx="8" cy="8" r="3.5" />
@@ -36,6 +45,11 @@ const KeyIcon = (props) => (
       </svg>
 );
 
+/**
+ * @description EyeIcon — SVG icon component for toggling password visibility.
+ * @param {Object} props - Component properties.
+ * @returns {React.ReactElement} SVG eye icon.
+ */
 const EyeIcon = (props) => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4 cursor-pointer" {...props}>
             <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -57,6 +71,8 @@ export default function LoginPage() {
       const user = useSelector(state => state.auth.user);
       const loading = useSelector(state => state.auth.loading);
       const error = useSelector(state => state.auth.error);
+
+      const theme = useSelector(state => state.theme.value);
 
       /**
        * using custom hook useReveal to reveal the login card with a delay of 0
@@ -83,6 +99,11 @@ export default function LoginPage() {
             setPersistNode(false);
       }
 
+      /**
+       * @description Handles submission of the login form, triggering handleLogin action and resetting form input state.
+       * @param {Event} e - Form submission event.
+       * @returns {Promise<void>}
+       */
       const handleSubmit = async (e) => {
             e.preventDefault();
             setSubmitted(true);
@@ -127,36 +148,55 @@ export default function LoginPage() {
       }
 
       return (
-            <div className="h-screen w-full bg-black relative overflow-hidden flex flex-col">
+            <div className="h-screen w-full bg-[var(--bg-app)] relative overflow-hidden flex flex-col">
                   {/* ambient background layers */}
-                  <div className="pointer-events-none absolute inset-0">
-                        {/* soft overall vignette so the center lifts slightly off pure black */}
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(30,35,50,0.35)_0%,_rgba(0,0,0,0)_55%)]" />
+                  {theme === "dark" ? (
+                        <div className="pointer-events-none absolute inset-0">
+                              {/* soft overall vignette so the center lifts slightly off pure background */}
+                              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(30,35,50,0.35)_0%,_rgba(0,0,0,0)_55%)]" />
 
-                        {/* faint indigo glow seated behind the card/header */}
-                        <div className="absolute top-[16%] left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[110px]" />
+                              {/* faint indigo glow seated behind the card/header */}
+                              <div className="absolute top-[16%] left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[110px]" />
 
-                        {/* green glow bleeding out from behind the card's bottom-left corner */}
-                        <div className="absolute top-[64%] left-[30%] h-[380px] w-[380px] rounded-full bg-lime-500/10 blur-[100px]" />
+                              {/* green glow bleeding out from behind the card's bottom-left corner */}
+                              <div className="absolute top-[64%] left-[30%] h-[380px] w-[380px] rounded-full bg-lime-500/10 blur-[100px]" />
 
-                        {/* subtle wash to lift the top-right corner slightly off pure black */}
-                        <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-slate-500/5 blur-[120px]" />
-                  </div>
+                              {/* subtle wash to lift the top-right corner slightly off pure background */}
+                              <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-slate-500/5 blur-[120px]" />
+                        </div>
+                  )
+                        :
+                        (
+                              <div className="pointer-events-none absolute inset-0">
+                                    {/* soft overall vignette so the center lifts slightly off pure app background */}
+                                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,87,34,0.06)_0%,_rgba(255,255,255,0)_55%)]" />
+
+                                    {/* faint orange glow seated behind the card/header */}
+                                    <div className="absolute top-[16%] left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-orange-500/10 blur-[110px]" />
+
+                                    {/* soft warm-gray glow bleeding out from behind the card's bottom-left corner */}
+                                    <div className="absolute top-[64%] left-[30%] h-[380px] w-[380px] rounded-full bg-stone-400/10 blur-[100px]" />
+
+                                    {/* subtle wash to lift the top-right corner slightly off pure background */}
+                                    <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-neutral-300/10 blur-[120px]" />
+                              </div>
+                        )
+                  }
 
                   {/* main card */}
                   <div ref={loginCardRef} className="relative z-10 flex-1 flex items-center justify-center px-4">
-                        <div className="relative w-full max-w-md rounded-xl bg-[#121414] backdrop-blur-xl p-10 shadow-[0_0_60px_rgba(0,0,0,0.6)] overflow-hidden">
+                        <div className={`relative w-full max-w-md rounded-xl bg-[var(--bg-surface)] backdrop-blur-xl p-10 ${theme === "dark" ? "shadow-[0_0_60px_rgba(0,0,0,0.6)]" : "border-[1.5px] border-[#c7c5c58e] bg-[#c7c5c58e]"} overflow-hidden`}>
 
                               {/* logo */}
                               <div className="relative flex justify-center mb-6">
-                                    <IoMdLogIn className="w-15 h-15 text-[#aec0ff]" />
+                                    <IoMdLogIn className="w-15 h-15 text-[var(--accent-primary)]" />
                               </div>
 
                               {/* heading */}
-                              <h1 className="relative text-center text-3xl font-bold text-slate-100">
+                              <h1 className="relative text-center text-3xl font-bold text-[var(--text-primary)]">
                                     Perplexor
                               </h1>
-                              <p className="relative mt-2 text-center text-xs font-mono tracking-[0.2em] text-slate-400">
+                              <p className="relative mt-2 text-center text-xs font-mono tracking-[0.2em] text-[var(--text-muted)]">
                                     LOGIN TO YOUR ACCOUNT
                               </p>
 
@@ -193,18 +233,18 @@ export default function LoginPage() {
                                           </Button>
                                     </div>
 
-                                    <Button type="submit" variant="primary" icon={<RiLoginCircleFill />} className="mt-2  !shadow-[0_0_30px_rgba(75,142,255,0.35)]">
+                                    <Button type="submit" variant="primary" icon={<RiLoginCircleFill />} className="mt-2">
                                           Login
                                     </Button>
                               </form>
 
                               {/* divider */}
-                              <div className="my-6 border-t border-slate-800" />
+                              <div className="my-6 border-t border-[var(--border-subtle)]" />
 
                               {/* footer link */}
-                              <p className="text-center text-sm text-slate-300">
+                              <p className="text-center text-sm text-[var(--text-secondary)]">
                                     First Time Here?{" "}
-                                    <Link to="/register" className="text-[#9DF800] hover:underline">Sign Up</Link>
+                                    <Link to="/register" className="text-[var(--accent-secondary)] hover:underline">Sign Up</Link>
                               </p>
                         </div>
                   </div>

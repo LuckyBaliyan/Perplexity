@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useChat } from '../hooks/useChat';
 import { useNavigate } from 'react-router';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from "remark-gfm";
 import {
       Plus,
       MessageSquare,
@@ -20,9 +21,12 @@ import {
       X,
       RefreshCw,
       Bot,
+      Sun,
+      Moon
 } from 'lucide-react';
 import useReveal from '../../animations/hooks/useReveal';
 import { setCurrentChatId, setError } from '../slices/chat.slice';
+import { toggleTheme as toggleThemeAction } from '../../shared/themes/theme.slice';
 
 /**
  * @description Renders code elements in Markdown, applying block styling for multiline code blocks and badge styling for inline code snippets.
@@ -35,7 +39,7 @@ const RenderCode = ({ children, className }) => {
             return <code className={className}>{children}</code>;
       }
       return (
-            <code className="bg-[#222525] text-[#adc6ff] px-1.5 py-0.5 rounded text-xs font-mono">
+            <code className="bg-[var(--bg-surface-active)] text-[var(--accent-primary)] px-1.5 py-0.5 rounded text-xs font-mono">
                   {children}
             </code>
       );
@@ -58,30 +62,68 @@ const RenderMessageContent = ({ content, isUser }) => {
       return (
             <div className="text-sm leading-relaxed break-words">
                   <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={{
                               p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-                              h1: ({ children }) => <h1 className="text-lg font-bold text-white mt-3 mb-2">{children}</h1>,
-                              h2: ({ children }) => <h2 className="text-base font-bold text-white mt-3 mb-2">{children}</h2>,
-                              h3: ({ children }) => <h3 className="text-sm font-bold text-white mt-2 mb-1">{children}</h3>,
+                              h1: ({ children }) => <h1 className="text-lg font-bold text-[var(--text-primary)] mt-3 mb-2">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-base font-bold text-[var(--text-primary)] mt-3 mb-2">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-sm font-bold text-[var(--text-primary)] mt-2 mb-1">{children}</h3>,
                               ul: ({ children }) => <ul className="list-disc list-inside my-2 space-y-1 text-sm">{children}</ul>,
                               ol: ({ children }) => <ol className="list-decimal list-inside my-2 space-y-1 text-sm">{children}</ol>,
                               li: ({ children }) => <li className="leading-relaxed">{children}</li>,
                               pre: ({ children }) => (
-                                    <pre className="bg-[#0c0f0f] border border-[#282a2b] rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono text-[#e2e2e2]">
+                                    <pre className="bg-[var(--bg-inset)] border border-[var(--border-subtle)] rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono text-[var(--text-primary)]">
                                           {children}
                                     </pre>
                               ),
                               code: RenderCode,
                               a: ({ href, children }) => (
-                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#adc6ff] underline hover:text-white transition-colors">
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-primary)] underline hover:text-[var(--text-primary)] transition-colors">
                                           {children}
                                     </a>
                               ),
                               blockquote: ({ children }) => (
-                                    <blockquote className="border-l-2 border-[#adc6ff]/50 pl-3 my-2 text-[#8b90a0] italic">
+                                    <blockquote className="border-l-2 border-[var(--accent-primary)]/50 pl-3 my-2 text-[var(--text-muted)] italic">
                                           {children}
                                     </blockquote>
-                              )
+                              ),
+                              table: ({ children }) => (
+                                    <div className="my-4 overflow-x-auto rounded-xl border border-[var(--border-subtle)]">
+                                          <table className="min-w-full border-collapse text-sm">
+                                                {children}
+                                          </table>
+                                    </div>
+                              ),
+
+                              thead: ({ children }) => (
+                                    <thead className="bg-[var(--bg-card)]">
+                                          {children}
+                                    </thead>
+                              ),
+
+                              tbody: ({ children }) => (
+                                    <tbody className="divide-y divide-[var(--border-subtle)]">
+                                          {children}
+                                    </tbody>
+                              ),
+
+                              tr: ({ children }) => (
+                                    <tr className="hover:bg-[var(--bg-surface-hover)] transition-colors">
+                                          {children}
+                                    </tr>
+                              ),
+
+                              th: ({ children }) => (
+                                    <th className="border border-[var(--border-subtle)] px-4 py-3 text-left font-semibold text-[var(--text-primary)] whitespace-nowrap">
+                                          {children}
+                                    </th>
+                              ),
+
+                              td: ({ children }) => (
+                                    <td className="border border-[var(--border-subtle)] px-4 py-3 text-[var(--text-secondary)] align-top">
+                                          {children}
+                                    </td>
+                              ),
                         }}
                   >
                         {content}
@@ -150,6 +192,13 @@ function Dashboard() {
                   chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
             }
       }, [currentMessages.length, isLoading]);
+
+      /**
+       * Toggle Theme between light and dark.
+      */
+      const theme = useSelector(state => state.theme.value);
+      const handleToggleTheme = () => dispatch(toggleThemeAction());
+
 
       /**
        * Format message time
@@ -275,7 +324,7 @@ function Dashboard() {
       };
 
       return (
-            <div className="flex h-screen w-full bg-[#121414] text-[#e2e2e2] overflow-hidden">
+            <div className="flex h-screen w-full bg-[var(--bg-surface)] text-[var(--text-primary)] overflow-hidden">
 
                   {/* ── Mobile overlay ── */}
                   {sidebarOpen && (
@@ -291,8 +340,8 @@ function Dashboard() {
                               fixed md:static inset-y-0 left-0 z-50
                               w-[260px] md:w-[280px] shrink-0
                               h-full
-                              bg-[#0c0f0f]/95 md:bg-[#0c0f0f] backdrop-blur-xl md:backdrop-blur-none
-                              border-r border-[#282a2b]
+                              bg-[var(--bg-inset)]/95 md:bg-[var(--bg-inset)] backdrop-blur-xl md:backdrop-blur-none
+                              border-r border-[var(--border-subtle)]
                               flex flex-col
                               transform transition-transform duration-300 ease-in-out
                               ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -303,17 +352,17 @@ function Dashboard() {
                         {/* Logo + mobile close */}
                         <div className="flex items-center justify-between px-5 py-5">
                               <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-                                    <div className="w-8 h-8 rounded-md bg-[#adc6ff] flex items-center justify-center text-[#002e69] font-bold text-sm">
+                                    <div className="w-8 h-8 rounded-md bg-[var(--accent-primary)] flex items-center justify-center text-[var(--text-inverse)] font-bold text-sm">
                                           P
                                     </div>
                                     <div>
-                                          <p className="text-sm font-semibold text-white leading-tight">Perplexor AI</p>
-                                          <p className="text-[11px] text-[#8b90a0] leading-tight">Powering Intelligence</p>
+                                          <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">Perplexor AI</p>
+                                          <p className="text-[11px] text-[var(--text-muted)] leading-tight">Powering Intelligence</p>
                                     </div>
                               </div>
                               <button
                                     onClick={() => setSidebarOpen(false)}
-                                    className="md:hidden cursor-pointer text-[#8b90a0] hover:text-white transition-colors"
+                                    className="md:hidden cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                               >
                                     <X size={20} />
                               </button>
@@ -323,7 +372,7 @@ function Dashboard() {
                         <div className="px-4 mt-2">
                               <button
                                     onClick={handleNewChat}
-                                    className="w-full cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-md border border-[#8bdc00]/40 text-[#9ffb06] text-sm font-medium hover:bg-[#8bdc00]/5 transition-colors"
+                                    className="w-full cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-md border border-[var(--accent-secondary)]/40 text-[var(--accent-secondary)] text-sm font-medium hover:bg-[var(--accent-secondary)]/5 transition-colors"
                               >
                                     <Plus size={16} />
                                     New Chat
@@ -333,7 +382,7 @@ function Dashboard() {
                         {/* ── Past chats list ── */}
                         <div className="flex-1 overflow-y-auto mt-4 px-2 flex flex-col gap-0.5">
                               {chatList.length > 0 && (
-                                    <p className="text-[10px] uppercase tracking-widest text-[#8b90a0] px-3 pb-1 pt-2">
+                                    <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] px-3 pb-1 pt-2">
                                           Recent
                                     </p>
                               )}
@@ -344,12 +393,12 @@ function Dashboard() {
                                           className={`
                                                 w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors
                                                 ${currentChatId === chat._id
-                                                      ? 'bg-[#1e2020] text-white'
-                                                      : 'text-[#c1c6d7] hover:bg-[#181a1a]'
+                                                      ? 'bg-[var(--bg-card)] text-[var(--text-primary)]'
+                                                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]'
                                                 }
                                           `}
                                     >
-                                          <MessageSquare size={14} className="shrink-0 mt-0.5 text-[#8b90a0]" />
+                                          <MessageSquare size={14} className="shrink-0 mt-0.5 text-[var(--text-muted)]" />
                                           <span className="truncate leading-snug">{getChatTitle(chat)}</span>
                                     </button>
                               ))}
@@ -357,15 +406,15 @@ function Dashboard() {
 
                         {/* Nav links */}
                         <nav className="flex flex-col gap-1 px-4 mt-2">
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#c1c6d7] hover:bg-[#1e2020] transition-colors">
+                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <Archive size={16} />
                                     Archives
                               </button>
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#c1c6d7] hover:bg-[#1e2020] transition-colors">
+                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <Zap size={16} />
                                     Capabilities
                               </button>
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#c1c6d7] hover:bg-[#1e2020] transition-colors">
+                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <Settings size={16} />
                                     Settings
                               </button>
@@ -373,29 +422,29 @@ function Dashboard() {
 
                         {/* Upgrade */}
                         <div className="px-4 mt-4">
-                              <button className="w-full py-2.5 rounded-md bg-[#adc6ff] text-[#002e69] text-sm font-semibold hover:bg-[#c3d5ff] transition-colors">
+                              <button className="w-full py-2.5 rounded-md bg-[var(--accent-primary)] text-[var(--text-inverse)] text-sm font-semibold hover:bg-[var(--accent-primary-hover)] transition-colors">
                                     Upgrade to Pro
                               </button>
                         </div>
 
                         {/* Help / Logout */}
                         <div className="flex flex-col gap-1 px-4 mt-4">
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#c1c6d7] hover:bg-[#1e2020] transition-colors">
+                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <HelpCircle size={16} />
                                     Help
                               </button>
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[#c1c6d7] hover:bg-[#1e2020] transition-colors">
+                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <LogOut size={16} />
                                     Logout
                               </button>
                         </div>
 
                         {/* User strip */}
-                        <div className="flex items-center gap-3 px-5 py-4 border-t border-[#282a2b] mt-2">
-                              <div className="w-8 h-8 cursor-pointer rounded-full bg-[#333535] flex items-center justify-center">
-                                    <User size={16} className="text-[#c1c6d7]" />
+                        <div className="flex items-center gap-3 px-5 py-4 border-t border-[var(--border-subtle)] mt-2">
+                              <div className="w-8 h-8 cursor-pointer rounded-full bg-[var(--border-default)] flex items-center justify-center">
+                                    <User size={16} className="text-[var(--text-secondary)]" />
                               </div>
-                              <p className="text-sm text-[#e2e2e2]">{user?.username || 'User Alpha'}</p>
+                              <p className="text-sm text-[var(--text-primary)]">{user?.username || 'User Alpha'}</p>
                         </div>
 
                   </aside>
@@ -404,43 +453,46 @@ function Dashboard() {
                   <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
                         {/* Header */}
-                        <header className="flex items-center justify-between px-4 md:px-8 py-4 border-b border-[#282a2b] shrink-0">
+                        <header className="flex items-center justify-between px-4 md:px-8 py-4 border-b border-[var(--border-subtle)] shrink-0">
 
                               <div className="flex items-center gap-4">
                                     <button
                                           onClick={() => setSidebarOpen(true)}
-                                          className="md:hidden cursor-pointer text-[#8b90a0] hover:text-white transition-colors"
+                                          className="md:hidden cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                                     >
                                           <Menu size={22} />
                                     </button>
 
                                     <div className="hidden md:flex items-center gap-6 text-sm">
-                                          <button className="text-white font-medium border-b-2 border-[#adc6ff] pb-1">Models</button>
-                                          <button className="text-[#8b90a0] hover:text-white transition-colors">API</button>
-                                          <button className="text-[#8b90a0] hover:text-white transition-colors">Enterprise</button>
+                                          <button className="text-[var(--text-primary)] font-medium border-b-2 border-[var(--accent-primary)] pb-1">Models</button>
+                                          <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">API</button>
+                                          <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">Enterprise</button>
                                     </div>
                               </div>
 
                               <div className="flex items-center gap-2 md:gap-4">
-                                    <div className="hidden sm:flex items-center gap-2 bg-[#1a1c1c] border border-[#414755] rounded-md px-3 py-1.5 w-40 md:w-64">
-                                          <Search size={14} className="text-[#8b90a0] shrink-0" />
+                                    <div className="hidden sm:flex items-center gap-2 bg-[var(--bg-surface-hover)] border border-[#8080806c]  rounded-md px-3 py-1.5 w-40 md:w-64">
+                                          <Search size={14} className="text-[var(--text-muted)] shrink-0" />
                                           <input
                                                 type="text"
-                                                placeholder="Search archive..."
-                                                className="bg-transparent outline-none text-sm text-[#e2e2e2] placeholder:text-[#8b90a0] w-full min-w-0"
+                                                placeholder="Search keywords.."
+                                                className="bg-transparent outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] w-full min-w-0"
                                                 style={{ fontFamily: 'JetBrains Mono, monospace' }}
                                           />
                                     </div>
-                                    <button className="sm:hidden cursor-pointer text-[#8b90a0] hover:text-white transition-colors">
+                                    <button className="sm:hidden cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                                           <Search size={18} />
                                     </button>
-                                    <button className="hidden cursor-pointer sm:inline-flex text-[#8b90a0] hover:text-white transition-colors">
-                                          <Bell size={18} />
+                                    <button
+                                          onClick={handleToggleTheme}
+                                          className="hidden sm:inline-flex cursor-pointer text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                                    >
+                                          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                                     </button>
-                                    <button className="hidden cursor-pointer sm:inline-flex text-[#8b90a0] hover:text-white transition-colors">
+                                    <button className="hidden cursor-pointer sm:inline-flex text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                                           <LayoutGrid size={18} />
                                     </button>
-                                    <button className="cursor-pointer flex items-center gap-2 bg-[#adc6ff] text-[#002e69] text-sm font-medium px-3 md:px-4 py-2 rounded-md hover:bg-[#c3d5ff] transition-colors">
+                                    <button className="cursor-pointer flex items-center gap-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] text-sm font-medium px-3 md:px-4 py-2 rounded-md hover:bg-[var(--accent-primary-hover)] transition-colors">
                                           <User size={16} className="sm:hidden" />
                                           <span className="hidden sm:inline">Profile Settings</span>
                                     </button>
@@ -460,16 +512,16 @@ function Dashboard() {
                                                       className="absolute inset-0 flex justify-center items-center pointer-events-none"
                                                       aria-hidden="true"
                                                 >
-                                                      <div className="h-32 w-[90%] rounded-full bg-gradient-to-r from-[#adc6ff]/0 via-[#adc6ff]/35 to-[#adc6ff]/0 blur-3xl" />
+                                                      <div className="h-32 w-[90%] rounded-full bg-gradient-to-r from-[var(--accent-primary)]/0 via-[var(--accent-primary)]/35 to-[var(--accent-primary)]/0 blur-3xl" />
                                                 </div>
 
                                                 <h1
                                                       ref={hRef}
-                                                      className="relative z-10 text-center text-white font-semibold tracking-tight text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl"
+                                                      className="relative z-10 text-center text-[var(--text-primary)] font-semibold tracking-tight text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl"
                                                       style={{ fontFamily: "Geist, sans-serif" }}
                                                 >
                                                       How can I assist your{" "}
-                                                      <span className="text-[#adc6ff] uppercase">
+                                                      <span className="text-[var(--accent-primary)] uppercase">
                                                             <em>Intelligence</em>
                                                       </span>{" "}
                                                       today?
@@ -478,7 +530,7 @@ function Dashboard() {
 
                                           {/* Input — lives here while no chat has started, no border/box, just floats under the heading */}
                                           <div className="w-full max-w-2xl mt-8 sm:mt-10">
-                                                <div className="flex items-center gap-2 sm:gap-3 bg-[#1a1c1c]/60 backdrop-blur-2xl border border-[#2e3030] focus-within:border-[#adc6ff]/40 rounded-xl px-4 sm:px-5 py-3 transition-colors duration-200">
+                                                <div className="flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface-hover)]/60 backdrop-blur-2xl border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 rounded-xl px-4 sm:px-5 py-3 transition-colors duration-200">
                                                       <textarea
                                                             ref={textareaRef}
                                                             value={inputValue}
@@ -487,7 +539,7 @@ function Dashboard() {
                                                             placeholder="Initialize prompt..."
                                                             rows={1}
                                                             disabled={isLoading}
-                                                            className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
+                                                            className="flex-1 bg-transparent outline-none text-[var(--text-primary)] placeholder:text-[var(--text-muted)] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
                                                             style={{ fontFamily: "JetBrains Mono, monospace" }}
                                                             onInput={(e) => {
                                                                   e.target.style.height = "auto";
@@ -501,13 +553,13 @@ function Dashboard() {
                                                             type="button"
                                                             onClick={handleSubmit}
                                                             disabled={!inputValue.trim() || isLoading}
-                                                            className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                       >
                                                             <ArrowUp size={18} strokeWidth={2.5} className="hover:-translate-y-1 transition-all" />
                                                       </button>
                                                 </div>
-                                                <p className="text-center text-[10px] text-[#8b90a0] mt-2">
-                                                      Press <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Shift + Enter</kbd> for newline
+                                                <p className="text-center text-[10px] text-[var(--text-muted)] mt-2">
+                                                      Press <kbd className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded px-1 py-0.5 text-[var(--text-secondary)]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded px-1 py-0.5 text-[var(--text-secondary)]">Shift + Enter</kbd> for newline
                                                 </p>
                                           </div>
                                     </div>
@@ -520,15 +572,14 @@ function Dashboard() {
                                           {currentMessages.map((msg, idx) => {
                                                 const isUser = msg.role === 'user';
                                                 return (
-                                                      <>
+                                                      <React.Fragment key={msg._id || idx}>
                                                             <div
-                                                                  key={msg._id || idx}
                                                                   className={`flex items-end gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
                                                             >
 
                                                                   {/* AI avatar — left side */}
                                                                   {!isUser && (
-                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-[#1e2020] border border-[#2e3030] flex items-center justify-center text-[#adc6ff]">
+                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-primary)]">
                                                                               <Bot size={16} />
                                                                         </div>
                                                                   )}
@@ -541,22 +592,22 @@ function Dashboard() {
                                                                         text-sm leading-relaxed px-4 py-3
                                                                         animate-[fadeSlideIn_0.25s_ease-out_both]
                                                                         ${isUser
-                                                                                    ? 'bg-[#1e2020] border border-[#2e3030] rounded-2xl rounded-tr-sm shadow-lg'
-                                                                                    : 'bg-[#161818] border border-[#222424] rounded-2xl rounded-tl-sm'
+                                                                                    ? 'bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl rounded-tr-sm'
+                                                                                    : 'bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] rounded-2xl rounded-tl-sm'
                                                                               }
                                                                   `}
                                                                         style={{ fontFamily: isUser ? 'JetBrains Mono, monospace' : 'inherit' }}
                                                                   >
                                                                         {/* Accent bar on user bubbles */}
                                                                         {isUser && (
-                                                                              <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[#adc6ff]/60" />
+                                                                              <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[var(--accent-primary)]/60" />
                                                                         )}
                                                                         <RenderMessageContent content={msg.content} isUser={isUser} />
                                                                         {/* Timestamp tooltip — hidden by default, fades in on bubble hover */}
                                                                         <span
                                                                               className={`
                                                                               pointer-events-none absolute top-[100%]  mt-2 whitespace-nowrap
-                                                                              text-[10px] text-[#8b90a0]
+                                                                              text-[10px] text-[var(--text-muted)]
                                                                               opacity-0 group-hover:opacity-100
                                                                               transition-opacity duration-150
                                                                               ${isUser ? 'right-2' : 'left-2'}
@@ -569,7 +620,7 @@ function Dashboard() {
 
                                                                   {/* User avatar — right side */}
                                                                   {isUser && (
-                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-[#adc6ff] flex items-center justify-center text-[#002e69] text-xs font-bold uppercase select-none">
+                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-[var(--accent-primary)] flex items-center justify-center text-[var(--text-inverse)] text-xs font-bold uppercase select-none">
                                                                               {user?.username?.[0] ?? 'U'}
                                                                         </div>
                                                                   )}
@@ -590,18 +641,18 @@ function Dashboard() {
                                                                                           className="
                                                                                           rounded-lg
                                                                                           border
-                                                                                          border-[#2e3030]
-                                                                                          bg-[#161818]
+                                                                                          border-[var(--border-subtle)]
+                                                                                          bg-[var(--bg-surface-elevated)]
                                                                                           px-3.5
                                                                                           py-1.5
                                                                                           text-xs
-                                                                                          text-[#8b90a0]
+                                                                                          text-[var(--text-muted)]
                                                                                           transition-colors
                                                                                           duration-200
                                                                                           cursor-pointer
-                                                                                          hover:border-[#adc6ff]/40
-                                                                                          hover:bg-[#1e2020]
-                                                                                          hover:text-[#e2e2e2]"
+                                                                                          hover:border-[var(--accent-primary)]/40
+                                                                                          hover:bg-[var(--bg-card)]
+                                                                                          hover:text-[var(--text-primary)]"
                                                                                     >
                                                                                           {question}
                                                                                     </button>
@@ -611,22 +662,22 @@ function Dashboard() {
                                                                         </div>
                                                                   )
                                                             }
-                                                      </>
+                                                      </React.Fragment>
                                                 );
                                           })}
 
                                           {/* ── Loading bubble (waiting for AI) ── */}
                                           {isLoading && (
                                                 <div className="flex items-end gap-3 justify-start">
-                                                      <div className="shrink-0 w-8 h-8 rounded-full bg-[#1e2020] border border-[#2e3030] flex items-center justify-center text-[#adc6ff]">
+                                                      <div className="shrink-0 w-8 h-8 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-primary)]">
                                                             <Bot size={16} />
                                                       </div>
-                                                      <div className="bg-[#161818] border border-[#222424] rounded-2xl rounded-tl-sm px-5 py-3.5">
+                                                      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] rounded-2xl rounded-tl-sm px-5 py-3.5">
                                                             {/* Three-dot pulse loader */}
                                                             <div className="flex gap-1.5 items-center h-4">
-                                                                  <span className="w-1.5 h-1.5 rounded-full bg-[#adc6ff]/70 animate-bounce [animation-delay:0ms]" />
-                                                                  <span className="w-1.5 h-1.5 rounded-full bg-[#adc6ff]/70 animate-bounce [animation-delay:150ms]" />
-                                                                  <span className="w-1.5 h-1.5 rounded-full bg-[#adc6ff]/70 animate-bounce [animation-delay:300ms]" />
+                                                                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]/70 animate-bounce [animation-delay:0ms]" />
+                                                                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]/70 animate-bounce [animation-delay:150ms]" />
+                                                                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]/70 animate-bounce [animation-delay:300ms]" />
                                                             </div>
                                                       </div>
                                                 </div>
@@ -635,10 +686,10 @@ function Dashboard() {
                                           {/* ── Error with retry ── */}
                                           {error && !isLoading && (
                                                 <div className="flex items-center gap-3 justify-start pl-11">
-                                                      <p className="text-xs text-red-400/80">{error}</p>
+                                                      <p className="text-xs text-[var(--color-error)]/80">{error}</p>
                                                       <button
                                                             onClick={handleRetry}
-                                                            className="flex items-center gap-1 text-xs text-[#adc6ff] hover:text-white border border-[#adc6ff]/30 hover:border-[#adc6ff]/60 rounded-md px-2 py-1 transition-colors cursor-pointer"
+                                                            className="flex items-center gap-1 text-xs text-[var(--accent-primary)] hover:text-[var(--text-primary)] border border-[var(--accent-primary)]/30 hover:border-[var(--accent-primary)]/60 rounded-md px-2 py-1 transition-colors cursor-pointer"
                                                       >
                                                             <RefreshCw size={11} />
                                                             Retry
@@ -657,7 +708,7 @@ function Dashboard() {
                         {(currentMessages.length > 0 || isLoading) && (
                               <div className="shrink-0 px-4 sm:px-6 pb-4 sm:pb-5">
                                     <div className="max-w-3xl mx-auto">
-                                          <div className="flex select-none items-center gap-2 sm:gap-3 bg-[#1a1c1c] border border-[#2e3030] focus-within:border-[#adc6ff]/40 rounded-xl px-4 sm:px-5 py-2.5 transition-colors duration-200">
+                                          <div className="flex select-none items-center gap-2 sm:gap-3 bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 rounded-xl px-4 sm:px-5 py-2.5 transition-colors duration-200">
                                                 <textarea
                                                       ref={textareaRef}
                                                       value={inputValue}
@@ -666,7 +717,7 @@ function Dashboard() {
                                                       placeholder="Initialize prompt..."
                                                       rows={1}
                                                       disabled={isLoading}
-                                                      className="flex-1 bg-transparent outline-none text-[#e2e2e2] placeholder:text-[#8b90a0] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
+                                                      className="flex-1 bg-transparent outline-none text-[var(--text-primary)] placeholder:text-[var(--text-muted)] text-sm min-w-0 resize-none max-h-[200px] overflow-y-auto disabled:opacity-50"
                                                       style={{ fontFamily: "JetBrains Mono, monospace" }}
                                                       onInput={(e) => {
                                                             e.target.style.height = "auto";
@@ -680,13 +731,13 @@ function Dashboard() {
                                                       type="button"
                                                       onClick={handleSubmit}
                                                       disabled={!inputValue.trim() || isLoading}
-                                                      className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[#adc6ff] text-[#002e69] hover:bg-[#c3d5ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                      className="shrink-0 self-end cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                       <ArrowUp size={18} strokeWidth={2.5} className="hover:-translate-y-1 transition-all" />
                                                 </button>
                                           </div>
-                                          <p className="text-center text-[10px] text-[#8b90a0] mt-1.5">
-                                                Press <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[#1e2020] border border-[#2e3030] rounded px-1 py-0.5 text-[#c1c6d7]">Shift + Enter</kbd> for newline
+                                          <p className="text-center text-[10px] text-[var(--text-muted)] mt-1.5">
+                                                Press <kbd className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded px-1 py-0.5 text-[var(--text-secondary)]">Enter</kbd> to send &nbsp;·&nbsp; <kbd className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded px-1 py-0.5 text-[var(--text-secondary)]">Shift + Enter</kbd> for newline
                                           </p>
                                     </div>
                               </div>

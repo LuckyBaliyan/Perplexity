@@ -1,17 +1,146 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap");
 @import "tailwindcss";
 
-::-webkit-scrollbar {
-  display: none;
+/* ----------------------------------------------------
+   DESIGN SYSTEM - COLOR VARIABLES & THEME DEFINITIONS
+   Default: Dark Theme (:root & [data-theme="dark"])
+   Light Theme ([data-theme="light"]): Prepared structure ready for future color overrides
+   ---------------------------------------------------- */
+
+:root,
+[data-theme="dark"] {
+  /* Main app and surface backgrounds */
+  --bg-app: #0b0b0b;
+  --bg-surface: #121414;
+  --bg-surface-elevated: #131314;
+  --bg-surface-hover: #1a1d1d;
+  --bg-surface-active: #222525;
+  --bg-inset: #0c0f0f;
+  --bg-card: #1e2020;
+
+  /* Borders and dividers */
+  --border-subtle: #282a2b;
+  --border-default: #333535;
+  --border-strong: #414755;
+
+  /* Typography / Text colors */
+  --text-primary: #e2e2e2;
+  --text-secondary: #c1c6d7;
+  --text-muted: #8b90a0;
+  --text-inverse: #002e69;
+
+  /* Accent colors */
+  --accent-primary: #adc6ff;
+  --accent-primary-hover: #aec0ff;
+  --accent-secondary: #9df800;
+  --accent-secondary-hover: #b1ff1a;
+
+  /* Status / Feedback colors */
+  --color-error: #ffb4ab;
+  --color-warning: #adc6ff;
+  --color-success: #9df800;
+  --color-info: #c1c6d7;
+}
+
+/**Light Theme */
+
+[data-theme="light"] {
+  /* Backgrounds — unchanged */
+  --bg-app: #FCFCFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FCFCFC;
+  --bg-surface-hover: #FCFCFC;
+  --bg-surface-active: #FCFCFC;
+  --bg-inset: #ffffff;
+  --bg-card: #F3F3F3;
+
+  /* Borders — now neutral grayscale */
+  --border-subtle: #e5e2e1;
+  /* secondary-container — hairline dividers, chat bubble borders */
+  --border-default: #c8c6c5;
+  /* secondary-fixed-dim — input fields, kbd chips */
+  --border-strong: #5f5e5e;
+  /* secondary — focus/emphasis borders */
+
+  /* Text — unchanged */
+  --text-primary: #1a1b1f;
+  --text-secondary: #5f5e5e;
+  --text-muted: #907067;
+  --text-inverse: #ffffff;
+
+  /* Accents — unchanged */
+  --accent-primary: #ff5722;
+  --accent-primary-hover: #b02f00;
+  --accent-secondary: #1a1b1f;
+  --accent-secondary-hover: #2f3034;
+
+  /* Status — unchanged */
+  --color-error: #ba1a1a;
+  --color-warning: #5d5f5d;
+  --color-success: #5f5e5e;
+  --color-info: #5b4039;
+
+  /*user Select Color */
+  --selection-bg: #ff5722;
+  --selection-text: #ffffff;
 }
 
 @theme {
   --font-sans: "IBM Plex Sans", sans-serif;
+
+  /* Map Design System Tokens into Tailwind v4 Theme */
+  --color-bg-app: var(--bg-app);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-elevated: var(--bg-surface-elevated);
+  --color-bg-surface-hover: var(--bg-surface-hover);
+  --color-bg-surface-active: var(--bg-surface-active);
+  --color-bg-inset: var(--bg-inset);
+  --color-bg-card: var(--bg-card);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-primary-hover: var(--accent-primary-hover);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-hover: var(--accent-secondary-hover);
+
+  --color-status-error: var(--color-error);
+  --color-status-warning: var(--color-warning);
+  --color-status-success: var(--color-success);
+  --color-status-info: var(--color-info);
+}
+
+
+/* Smooth theme transition for all elements */
+*,
+*::before,
+*::after {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/** user Select Color for Light Theme */
+[data-theme="light"] ::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 html,
 body {
-  background-color: #0b0b0b;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Chat bubble entry animation */

@@ -158,59 +158,56 @@ function parseAuthError(error) {
 }
 
 const TONE_COLOR = {
-      error: "text-[#ffb4ab]",
-      warn: "text-[#adc6ff]",
-      info: "text-[#c1c6d7]",
+      error: "text-[var(--color-error)]",
+      warn: "text-[var(--accent-primary)]",
+      info: "text-[var(--text-secondary)]",
 };
 
 /**
- * Shown in place of the error content whenever a user is sitting in the
- * store — this is the load-bearing guard: it's what stops a stale
- * state.auth.error (e.g. the 401 every logged-out visitor gets from the
- * initial getMe check) from ever being displayed to someone who is, in
- * fact, already authenticated.
+ * @description LoadingScreen — Renders temporary loading layout while session is being verified.
+ * @returns {React.ReactElement} Loading screen element.
  */
 function LoadingScreen() {
       return (
-            <div className="min-h-screen bg-[#121414] text-[#e2e2e2] font-[Geist,sans-serif] flex flex-col">
-                  <header className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-[#414755]/40">
+            <div className="min-h-screen bg-[var(--bg-surface)] text-[var(--text-primary)] font-[Geist,sans-serif] flex flex-col">
+                  <header className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-[var(--border-strong)]/40">
                         <div className="flex items-center gap-3">
                               <span className="text-xl font-bold tracking-tight">Perplexor AI</span>
-                              <span className="text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase px-2 py-1 rounded border border-[#414755] text-[#adc6ff]">
+                              <span className="text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase px-2 py-1 rounded border border-[var(--border-strong)] text-[var(--accent-primary)]">
                                     System
                               </span>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[#c1c6d7]">
-                              <span className="h-1.5 w-1.5 rounded-full bg-[#9df800] animate-pulse" />
+                        <div className="flex items-center gap-2 text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[var(--text-secondary)]">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-secondary)] animate-pulse" />
                               SESSION_ESTABLISHED
                         </div>
                   </header>
 
                   <main className="flex-1 flex flex-col items-center justify-center px-6">
                         <div className="relative w-20 h-20">
-                              <div className="absolute inset-0 rounded-full border-2 border-[#333535]" />
+                              <div className="absolute inset-0 rounded-full border-2 border-[var(--border-default)]" />
                               <div
-                                    className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#adc6ff] animate-spin"
+                                    className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--accent-primary)] animate-spin"
                                     style={{ filter: "drop-shadow(0 0 12px rgba(173,198,255,0.6))" }}
                               />
                         </div>
 
-                        <p className="mt-8 text-[12px] md:text-sm font-[JetBrains_Mono,monospace] tracking-[0.3em] uppercase text-[#adc6ff]">
+                        <p className="mt-8 text-[12px] md:text-sm font-[JetBrains_Mono,monospace] tracking-[0.3em] uppercase text-[var(--accent-primary)]">
                               Access Granted
                         </p>
 
-                        <h1 className="mt-3 text-2xl md:text-3xl font-bold text-[#e2e2e2] text-center">
+                        <h1 className="mt-3 text-2xl md:text-3xl font-bold text-[var(--text-primary)] text-center">
                               Establishing Secure Session
                         </h1>
 
-                        <p className="mt-4 max-w-md text-center text-sm md:text-base text-[#c1c6d7] leading-relaxed">
+                        <p className="mt-4 max-w-md text-center text-sm md:text-base text-[var(--text-secondary)] leading-relaxed">
                               Identity confirmed by the core. Routing you to your dashboard now.
                         </p>
                   </main>
 
-                  <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 md:px-10 py-6 border-t border-[#414755]/30 text-[13px] text-[#8b90a0]">
+                  <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 md:px-10 py-6 border-t border-[var(--border-strong)]/30 text-[13px] text-[var(--text-muted)]">
                         <span>
-                              <span className="text-[#adc6ff]">NeonAI</span> Systems &nbsp;|&nbsp; © 2026 NeonAI Systems. All rights reserved.
+                              <span className="text-[var(--accent-primary)]">NeonAI</span> Systems &nbsp;|&nbsp; © 2026 NeonAI Systems. All rights reserved.
                         </span>
                   </footer>
             </div>
@@ -218,14 +215,19 @@ function LoadingScreen() {
 }
 
 /**
- * Inline resend-verification widget, shown only for the "verify" variant.
- * Owns its own request state so it doesn't need to touch the auth slice.
+ * @description ResendVerificationPanel — Inline resend verification link component.
+ * @param {Object} props - Prefilled email address prop.
+ * @returns {React.ReactElement} Verification panel element.
  */
 function ResendVerificationPanel({ prefilledEmail }) {
       const [email, setEmail] = useState(prefilledEmail || "");
       const [status, setStatus] = useState("idle"); // idle | loading | sent | error
       const [feedback, setFeedback] = useState("");
 
+      /**
+       * @description Triggers email resend verification API request.
+       * @returns {Promise<void>}
+       */
       async function handleResend() {
             if (!email) {
                   setStatus("error");
@@ -259,7 +261,7 @@ function ResendVerificationPanel({ prefilledEmail }) {
 
       return (
             <div className="mt-10 w-full max-w-md">
-                  <label className="block text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[#8b90a0] mb-2">
+                  <label className="block text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[var(--text-muted)] mb-2">
                         Account Email
                   </label>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -268,12 +270,12 @@ function ResendVerificationPanel({ prefilledEmail }) {
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="you@example.com"
-                              className="flex-1 rounded bg-[#0c0f0f]/80 backdrop-blur-xl border border-[#414755] focus:border-[#adc6ff] focus:outline-none focus:ring-1 focus:ring-[#adc6ff] px-4 py-3 text-sm font-[JetBrains_Mono,monospace] text-[#e2e2e2] placeholder:text-[#8b90a0] transition"
+                              className="flex-1 rounded bg-[var(--bg-inset)]/80 backdrop-blur-xl border border-[var(--border-strong)] focus:border-[var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-primary)] px-4 py-3 text-sm font-[JetBrains_Mono,monospace] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition"
                         />
                         <button
                               onClick={handleResend}
                               disabled={status === "loading"}
-                              className="shrink-0 cursor-pointer px-6 py-3 rounded-lg bg-[#adc6ff] text-[#002e69] font-semibold hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                              className="shrink-0 cursor-pointer px-6 py-3 rounded-lg bg-[var(--accent-primary)] text-[var(--text-inverse)] font-semibold hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition"
                               style={{ boxShadow: "0 0 24px rgba(173,198,255,0.35)" }}
                         >
                               {status === "loading" ? "Sending..." : "Resend Link"}
@@ -282,7 +284,7 @@ function ResendVerificationPanel({ prefilledEmail }) {
 
                   {feedback && (
                         <p
-                              className={`mt-3 text-sm font-[JetBrains_Mono,monospace] ${status === "sent" ? "text-[#9df800]" : "text-[#ffb4ab]"
+                              className={`mt-3 text-sm font-[JetBrains_Mono,monospace] ${status === "sent" ? "text-[var(--accent-secondary)]" : "text-[var(--color-error)]"
                                     }`}
                         >
                               {feedback}
@@ -293,12 +295,8 @@ function ResendVerificationPanel({ prefilledEmail }) {
 }
 
 /**
- * Error Page — Cyber-Modern Intelligence terminal error screen.
- * Reads state.auth.error from Redux and renders the matching diagnostic view.
- * If a user exists in the store, this shows a loading screen and redirects
- * instead — no error message is ever shown to someone who's authenticated,
- * regardless of whatever stale value state.auth.error might be holding.
- * @returns React Component
+ * @description Error Page — Cyber-Modern Intelligence terminal error screen using design system variables.
+ * @returns {React.ReactElement} Error page component.
  */
 export default function Error() {
       const error = useSelector((state) => state.auth.error);
@@ -318,17 +316,17 @@ export default function Error() {
       }
 
       return (
-            <div className="min-h-screen bg-[#121414] text-[#e2e2e2] font-[Geist,sans-serif] flex flex-col">
+            <div className="min-h-screen bg-[var(--bg-surface)] text-[var(--text-primary)] font-[Geist,sans-serif] flex flex-col">
                   {/* Top bar */}
-                  <header className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-[#414755]/40">
+                  <header className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-[var(--border-strong)]/40">
                         <div className="flex items-center gap-3">
                               <span className="text-xl font-bold tracking-tight">Perplexor AI</span>
-                              <span className="text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase px-2 py-1 rounded border border-[#414755] text-[#adc6ff]">
+                              <span className="text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase px-2 py-1 rounded border border-[var(--border-strong)] text-[var(--accent-primary)]">
                                     System
                               </span>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[#c1c6d7]">
-                              <span className="h-1.5 w-1.5 rounded-full bg-[#ffb4ab] animate-pulse" />
+                        <div className="flex items-center gap-2 text-[11px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[var(--text-secondary)]">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-error)] animate-pulse" />
                               {content.status}_V4.0
                         </div>
                   </header>
@@ -336,33 +334,33 @@ export default function Error() {
                   {/* Main */}
                   <main className="flex-1 flex flex-col items-center px-6 py-16 md:py-24">
                         <div
-                              className="text-[96px] md:text-[160px] leading-none font-extrabold text-[#adc6ff]"
+                              className="text-[96px] md:text-[160px] leading-none font-extrabold text-[var(--accent-primary)]"
                               style={{ textShadow: "0 0 60px rgba(173,198,255,0.35)" }}
                         >
                               {content.code}
                         </div>
 
-                        <p className="mt-6 text-[12px] md:text-sm font-[JetBrains_Mono,monospace] tracking-[0.3em] uppercase text-[#adc6ff]">
+                        <p className="mt-6 text-[12px] md:text-sm font-[JetBrains_Mono,monospace] tracking-[0.3em] uppercase text-[var(--accent-primary)]">
                               {content.status.replace(/_/g, " ")}
                         </p>
 
-                        <h1 className="mt-4 text-3xl md:text-5xl font-bold text-[#e2e2e2] text-center">
+                        <h1 className="mt-4 text-3xl md:text-5xl font-bold text-[var(--text-primary)] text-center">
                               {content.title}
                         </h1>
 
-                        <p className="mt-5 max-w-xl text-center text-base md:text-lg text-[#c1c6d7] leading-relaxed">
+                        <p className="mt-5 max-w-xl text-center text-base md:text-lg text-[var(--text-secondary)] leading-relaxed">
                               {content.description}
                         </p>
 
                         {/* Panels */}
                         <div className="mt-12 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-5">
                               {/* Status card */}
-                              <div className="rounded bg-[#1e2020]/60 backdrop-blur-xl border border-[#414755]/30 p-6">
+                              <div className="rounded bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border-strong)]/30 p-6">
                                     <div className="flex items-center justify-between">
-                                          <span className="text-[12px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[#c1c6d7]">
+                                          <span className="text-[12px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[var(--text-secondary)]">
                                                 Status
                                           </span>
-                                          <svg className="w-5 h-5 text-[#adc6ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path
                                                       strokeLinecap="round"
                                                       strokeLinejoin="round"
@@ -371,28 +369,28 @@ export default function Error() {
                                                 />
                                           </svg>
                                     </div>
-                                    <div className="mt-6 h-1.5 w-full rounded-full bg-[#333535] overflow-hidden">
-                                          <div className="h-full bg-[#adc6ff] rounded-full" style={{ width: "34%" }} />
+                                    <div className="mt-6 h-1.5 w-full rounded-full bg-[var(--border-default)] overflow-hidden">
+                                          <div className="h-full bg-[var(--accent-primary)] rounded-full" style={{ width: "34%" }} />
                                     </div>
-                                    <p className="mt-3 text-sm text-[#c1c6d7] font-[JetBrains_Mono,monospace]">
+                                    <p className="mt-3 text-sm text-[var(--text-secondary)] font-[JetBrains_Mono,monospace]">
                                           Auth Core Load: 34%
                                     </p>
                               </div>
 
                               {/* Diagnostic report */}
-                              <div className="rounded bg-[#1e2020]/60 backdrop-blur-xl border border-[#414755]/30 p-6">
-                                    <div className="flex items-center gap-2 text-[12px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[#c1c6d7]">
-                                          <svg className="w-4 h-4 text-[#ffb4ab]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="rounded bg-[var(--bg-card)]/60 backdrop-blur-xl border border-[var(--border-strong)]/30 p-6">
+                                    <div className="flex items-center gap-2 text-[12px] font-[JetBrains_Mono,monospace] tracking-widest uppercase text-[var(--text-secondary)]">
+                                          <svg className="w-4 h-4 text-[var(--color-error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h7" />
                                           </svg>
                                           Diagnostic Report
                                     </div>
-                                    <div className="mt-4 rounded bg-[#0c0f0f] border border-[#414755]/30 p-4 space-y-1.5 font-[JetBrains_Mono,monospace] text-[13px] max-h-48 overflow-y-auto">
+                                    <div className="mt-4 rounded bg-[var(--bg-inset)] border border-[var(--border-strong)]/30 p-4 space-y-1.5 font-[JetBrains_Mono,monospace] text-[13px] max-h-48 overflow-y-auto">
                                           {content.logs.map((log, i) => (
-                                                <p key={i} className="text-[#c1c6d7]">
-                                                      <span className="text-[#8b90a0]">{"> "}</span>
-                                                      <span className="text-[#e2e2e2]">[{log.level}]</span>{" "}
-                                                      <span className={TONE_COLOR[log.tone] || "text-[#c1c6d7]"}>{log.text}</span>
+                                                <p key={i} className="text-[var(--text-secondary)]">
+                                                      <span className="text-[var(--text-muted)]">{"> "}</span>
+                                                      <span className="text-[var(--text-primary)]">[{log.level}]</span>{" "}
+                                                      <span className={TONE_COLOR[log.tone] || "text-[var(--text-secondary)]"}>{log.text}</span>
                                                 </p>
                                           ))}
                                     </div>
@@ -408,7 +406,7 @@ export default function Error() {
                         <div className="mt-10 flex flex-col sm:flex-row gap-4">
                               <button
                                     onClick={() => navigate("/login")}
-                                    className="flex cursor-pointer items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#adc6ff] text-[#002e69] font-semibold hover:brightness-110 transition"
+                                    className="flex cursor-pointer items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[var(--accent-primary)] text-[var(--text-inverse)] font-semibold hover:brightness-110 transition"
                                     style={{ boxShadow: "0 0 24px rgba(173,198,255,0.35)" }}
                               >
                                     Return to Login
@@ -417,18 +415,18 @@ export default function Error() {
                   </main>
 
                   {/* Footer */}
-                  <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 md:px-10 py-6 border-t border-[#414755]/30 text-[13px] text-[#8b90a0]">
+                  <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 md:px-10 py-6 border-t border-[var(--border-strong)]/30 text-[13px] text-[var(--text-muted)]">
                         <span>
-                              <span className="text-[#adc6ff]">NeonAI</span> Systems &nbsp;|&nbsp; © 2026 NeonAI Systems. All rights reserved.
+                              <span className="text-[var(--accent-primary)]">NeonAI</span> Systems &nbsp;|&nbsp; © 2026 NeonAI Systems. All rights reserved.
                         </span>
                         <div className="flex gap-6">
-                              <a href="#" className="hover:text-[#e2e2e2] transition">
+                              <a href="#" className="hover:text-[var(--text-primary)] transition">
                                     Privacy Policy
                               </a>
-                              <a href="#" className="hover:text-[#e2e2e2] transition">
+                              <a href="#" className="hover:text-[var(--text-primary)] transition">
                                     Terms of Service
                               </a>
-                              <a href="#" className="hover:text-[#e2e2e2] transition">
+                              <a href="#" className="hover:text-[var(--text-primary)] transition">
                                     Documentation
                               </a>
                         </div>
