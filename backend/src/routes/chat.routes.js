@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authUser } from "../middlewares/auth.middleware.js";
-import { sendMessage, getChats, getMessages, deleteChat } from "../controllers/chat.controller.js";
+import { sendMessage, getChats, getMessages, deleteChat, markChat } from "../controllers/chat.controller.js";
 
 const chatRouter = Router();
 
@@ -35,5 +35,12 @@ chatRouter.get("/:chatId/messages", authUser, getMessages);
  * @access Private
 */
 chatRouter.delete("/delete/:chatId", authUser, deleteChat);
+
+/**
+ * @route PATCH /api/chat/markChat/:chatId
+ * @description Mark chat as pinned or archived
+ * @access Private
+*/
+chatRouter.patch("/markChat/:chatId", authUser, markChat);
 
 export default chatRouter;

@@ -25,6 +25,17 @@ const chatSchema = new Schema(
                   maxlength: [200, "Title cannot exceed 200 characters"],
             },
 
+            // Is it a pinned chat or not
+            isPinned: {
+                  type: Boolean,
+                  default: false,
+            },
+
+            //Is it archived chat
+            isArchived: {
+                  type: Boolean,
+                  default: false,
+            }
       },
       {
             timestamps: true, // Adds createdAt and updatedAt automatically

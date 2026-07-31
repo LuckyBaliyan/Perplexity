@@ -34,9 +34,54 @@ const chatSlice = createSlice({
             },
             removeChat: (state, action) => {
                   delete state.chats[action.payload];
+            },
+            appendAiToken: (state, action) => {
+
+                  const { chatId, token } = action.payload;
+
+                  const chat = state.chats[chatId];
+
+                  if (!chat) return;
+
+                  if (!chat.messages) {
+                        chat.messages = [];
+                  }
+
+                  const lastMessage = chat.messages[chat.messages.length - 1];
+
+                  // First token → create AI message
+                  if (!lastMessage || lastMessage.role !== "ai") {
+
+                        chat.messages.push({
+                              _id: "streaming",
+                              role: "ai",
+                              content: token,
+                        });
+
+                        return;
+                  }
+
+                  // Remaining tokens
+                  lastMessage.content += token;
+            },
+            finishAiMessage: (state, action) => {
+
+                  const { chatId, aiMessage } = action.payload;
+
+                  const chat = state.chats[chatId];
+
+                  if (!chat) return;
+
+                  const index = chat.messages.findIndex(
+                        m => m._id === "streaming"
+                  );
+
+                  if (index !== -1) {
+                        chat.messages[index] = aiMessage;
+                  }
             }
       }
 });
 
-export const { setChats, setCurrentChatId, setIsLoading, setError, mergeChat, removeChat } = chatSlice.actions;
+export const { setChats, setCurrentChatId, setIsLoading, setError, mergeChat, removeChat, appendAiToken, finishAiMessage } = chatSlice.actions;
 export default chatSlice.reducer;

@@ -6,15 +6,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from "remark-gfm";
 import {
       Plus,
-      MessageSquare,
       Archive,
-      Zap,
       Settings,
       HelpCircle,
       LogOut,
       User,
       Search,
-      Bell,
       LayoutGrid,
       ArrowUp,
       Menu,
@@ -22,11 +19,21 @@ import {
       RefreshCw,
       Bot,
       Sun,
-      Moon
+      Moon,
+      MessageCircle,
+      Pin,
+      Trash2,
+      MoreHorizontal,
+      CircleUser,
+      PinOffIcon,
 } from 'lucide-react';
 import useReveal from '../../animations/hooks/useReveal';
-import { setCurrentChatId, setError } from '../slices/chat.slice';
+import { setCurrentChatId, setError } from
+      '../slices/chat.slice';
 import { toggleTheme as toggleThemeAction } from '../../shared/themes/theme.slice';
+import { Archives as ArchivesView } from './Archives';
+import { Chats as AllChatsView } from './Chats';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 /**
  * @description Renders code elements in Markdown, applying block styling for multiline code blocks and badge styling for inline code snippets.
@@ -136,13 +143,15 @@ const RenderMessageContent = ({ content, isUser }) => {
 /**
  * @description Dashboard — full chat UI wired to Redux + useChat hook.
  * Handles: sending messages, showing AI responses, loading/error states,
- * sidebar chat list, new-chat reset, and clicking past chats to restore them.
+ * sidebar chat list, new-chat reset, clicking past chats to restore them,
+ * and switching between the live chat view, All Chats view, and Archives view.
  * @returns React Component
  */
 function Dashboard() {
 
       const dispatch = useDispatch();
-      const { initalizeSocketConnection, handleSendMessage, fetchAllChats, loadChat } = useChat();
+      const { initializeSocketConnection, handleSendMessage, fetchAllChats, loadChat, deleteCurrChat, handleMarkChat } = useChat();
+      const { handleLogOut } = useAuth();
 
       // ── Refs ────────────────────────────────────────────────────────────────
       const hRef = useRef(null);
@@ -164,6 +173,9 @@ function Dashboard() {
       // ── Local UI state ────────────────────────────────────────────────────────
       const [sidebarOpen, setSidebarOpen] = useState(false);
       const [inputValue, setInputValue] = useState('');
+      const [openMenu, setOpenMenu] = useState(null);
+      /** activeView — controls what's shown in the main pane: 'chat' | 'archives' | 'allchats' */
+      const [activeView, setActiveView] = useState('chat');
 
       // ── Derive current messages from Redux ────────────────────────────────────
       /**
@@ -179,11 +191,19 @@ function Dashboard() {
             .filter(Boolean)  // remove any null placeholders from temp-key cleanup
             .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
+      /** seprate both type of chats */
+      const pinnedChats = chatList.filter(c => c.isPinned).slice(0, 3);
+      const recentChats = chatList.filter(c => !c.isPinned);
+      const archivedChats = chatList.filter(c => c.isArchived);
+
       // ── Effects ───────────────────────────────────────────────────────────────
       /** Initialize socket + load all user chats on mount */
       useEffect(() => {
-            initalizeSocketConnection();
+
+            const socket = initializeSocketConnection(user?._id || user?.id);
+
             fetchAllChats();
+
       }, []);
 
       /** Auto-scroll to latest message whenever the list grows or loading changes */
@@ -250,14 +270,21 @@ function Dashboard() {
 
       /**
        * handleNewChat — resets the active chat so the hero screen is shown again.
-       * Existing chats remain in the sidebar.
+       * Existing chats remain in the sidebar. Also returns to the chat view
+       * if we were on Archives / All Chats.
        */
       const handleNewChat = () => {
             dispatch(setCurrentChatId(null));
             dispatch(setError(null));
             setInputValue('');
             setSidebarOpen(false);
+            setActiveView('chat');
       };
+
+
+      const handleDeleteChat = async (chatId) => {
+            await deleteCurrChat(chatId);
+      }
 
       /**
        * @description Handles related questions click - Sets the message in the input field and focuses on it
@@ -283,16 +310,30 @@ function Dashboard() {
       /**
        * handleSelectChat — loads a past chat by id and sets it as active.
        * If messages are already in Redux state, just switches — no network call.
+       * Also brings the main pane back to the chat view (e.g. after picking
+       * a chat from Archives or All Chats).
        * @param {string} chatId
        */
       const handleSelectChat = async (chatId) => {
             setSidebarOpen(false);
+            setActiveView('chat');
             if (chats[chatId]?.messages?.length > 0) {
                   dispatch(setCurrentChatId(chatId));
             } else {
                   await loadChat(chatId);
             }
       };
+
+
+      /**
+       * @description Handles pin and archive chat action.
+       * @param {*} chatId 
+       * @param {*} payload 
+       */
+      const handlePinAndArchiveChat = async (chatId, payload) => {
+            await handleMarkChat(chatId, payload);
+      }
+
 
       /**
        * handleRetry — clears the error and re-sends the last user message.
@@ -323,6 +364,15 @@ function Dashboard() {
             return clean.length > 40 ? clean.slice(0, 40) + '…' : clean;
       };
 
+
+      const logOutUser = async () => {
+            try {
+                  await handleLogOut();
+            } catch (error) {
+                  console.log(error);
+            }
+      }
+
       return (
             <div className="flex h-screen w-full bg-[var(--bg-surface)] text-[var(--text-primary)] overflow-hidden">
 
@@ -352,7 +402,7 @@ function Dashboard() {
                         {/* Logo + mobile close */}
                         <div className="flex items-center justify-between px-5 py-5">
                               <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-                                    <div className="w-8 h-8 rounded-md bg-[var(--accent-primary)] flex items-center justify-center text-[var(--text-inverse)] font-bold text-sm">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--accent-primary)] flex items-center justify-center text-[var(--text-inverse)] font-bold text-sm">
                                           P
                                     </div>
                                     <div>
@@ -379,40 +429,27 @@ function Dashboard() {
                               </button>
                         </div>
 
-                        {/* ── Past chats list ── */}
-                        <div className="flex-1 overflow-y-auto mt-4 px-2 flex flex-col gap-0.5">
-                              {chatList.length > 0 && (
-                                    <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] px-3 pb-1 pt-2">
-                                          Recent
-                                    </p>
-                              )}
-                              {chatList.map(chat => (
-                                    <button
-                                          key={chat._id}
-                                          onClick={() => handleSelectChat(chat._id)}
-                                          className={`
-                                                w-full text-left flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors
-                                                ${currentChatId === chat._id
-                                                      ? 'bg-[var(--bg-card)] text-[var(--text-primary)]'
-                                                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]'
-                                                }
-                                          `}
-                                    >
-                                          <MessageSquare size={14} className="shrink-0 mt-0.5 text-[var(--text-muted)]" />
-                                          <span className="truncate leading-snug">{getChatTitle(chat)}</span>
-                                    </button>
-                              ))}
-                        </div>
-
                         {/* Nav links */}
                         <nav className="flex flex-col gap-1 px-4 mt-2">
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
+                              <button
+                                    onClick={() => setActiveView('allchats')}
+                                    className={`cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeView === 'allchats'
+                                          ? 'bg-[var(--bg-card)] text-[var(--text-primary)]'
+                                          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card)]'
+                                          }`}
+                              >
+                                    <MessageCircle size={16} />
+                                    Chats
+                              </button>
+                              <button
+                                    onClick={() => setActiveView('archives')}
+                                    className={`cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeView === 'archives'
+                                          ? 'bg-[var(--bg-card)] text-[var(--text-primary)]'
+                                          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card)]'
+                                          }`}
+                              >
                                     <Archive size={16} />
                                     Archives
-                              </button>
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
-                                    <Zap size={16} />
-                                    Capabilities
                               </button>
                               <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <Settings size={16} />
@@ -420,20 +457,262 @@ function Dashboard() {
                               </button>
                         </nav>
 
-                        {/* Upgrade */}
-                        <div className="px-4 mt-4">
-                              <button className="w-full py-2.5 rounded-md bg-[var(--accent-primary)] text-[var(--text-inverse)] text-sm font-semibold hover:bg-[var(--accent-primary-hover)] transition-colors">
-                                    Upgrade to Pro
-                              </button>
+                        {/* pinned chat section */}
+                        {pinnedChats.length > 0 && (
+                              <>
+                                    <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] px-3 pt-2 pb-1">
+                                          Pinned
+                                    </p>
+
+                                    {pinnedChats.map((pinnedChat) => (
+                                          <div className="relative px-2" key={pinnedChat._id}>
+                                                <button
+                                                      onClick={() => handleSelectChat(pinnedChat._id)}
+                                                      className={`
+                                                             w-full
+                                                             flex
+                                                             relative
+                                                             items-center
+                                                             gap-2
+                                                             px-3
+                                                             py-2
+                                                             pr-10
+                                                             rounded-lg
+                                                             transition-colors
+                                                             ${currentChatId === pinnedChat._id
+                                                                  ? "bg-[var(--bg-card)]"
+                                                                  : "hover:bg-[var(--bg-surface-hover)]"
+                                                            }
+                                                     `}
+                                                >
+                                                      <MessageCircle
+                                                            size={14}
+                                                            className="shrink-0 text-[var(--text-muted)]"
+                                                      />
+
+                                                      <span className="flex-1 truncate text-left">
+                                                            {getChatTitle(pinnedChat)}
+                                                      </span>
+                                                </button>
+                                                <button
+                                                      onClick={() =>
+                                                            setOpenMenu(
+                                                                  openMenu === pinnedChat._id
+                                                                        ? null
+                                                                        : pinnedChat._id
+                                                            )
+                                                      }
+                                                      className="
+                                          absolute
+                                          right-4
+                                          top-1/2
+                                          -translate-y-1/2
+                                          opacity-100
+                                          group-hover:opacity-100
+                                          z-[50]
+                                          p-1
+                                          rounded
+                                          hover:bg-[var(--bg-surface-hover)]
+                                          "
+                                                >
+                                                      <MoreHorizontal size={16} />
+                                                </button>
+
+                                                {
+                                                      openMenu === pinnedChat._id && (
+
+                                                            <div
+                                                                  className="
+                                          absolute
+                                          right-2
+                                          top-[calc(100%+4px)]
+                                          w-44
+                                          rounded-lg
+                                          border
+                                          border-[var(--border-subtle)]
+                                          bg-[var(--bg-card)]
+                                          shadow-2xl
+                                          z-80
+                                          "
+                                                            >
+                                                                  <button
+                                                                        onClick={() => {
+                                                                              handlePinAndArchiveChat(pinnedChat._id, {
+                                                                                    isPinned: false,
+                                                                                    isArchived: pinnedChat.isArchived,
+                                                                              });
+                                                                              setOpenMenu(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[var(--bg-surface-hover)]"
+                                                                  >
+                                                                        <PinOffIcon size={15} />
+                                                                        Remove Pin
+                                                                  </button>
+
+                                                                  <button
+                                                                        onClick={() => {
+                                                                              handlePinAndArchiveChat(pinnedChat._id, {
+                                                                                    isPinned: pinnedChat.isPinned,
+                                                                                    isArchived: pinnedChat.isArchived ? false : true,
+                                                                              });
+                                                                              setOpenMenu(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[var(--bg-surface-hover)]"
+                                                                  >
+                                                                        <Archive size={15} />
+                                                                        {pinnedChat.isArchived ? "Unarchive" : "Archive"}
+                                                                  </button>
+
+                                                                  <button
+                                                                        onClick={() => {
+                                                                              handleDeleteChat(pinnedChat._id);
+                                                                              setOpenMenu(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-red-500 hover:bg-red-500/10"
+                                                                  >
+                                                                        <Trash2 size={15} />
+                                                                        Delete
+                                                                  </button>
+
+                                                            </div>
+                                                      )}
+                                          </div>
+                                    ))}
+                              </>
+                        )}
+
+                        {/* ── Past chats list ── */}
+                        <div className="flex-1 overflow-y-auto mt-4 px-2 flex flex-col gap-0.5">
+                              {recentChats.length > 0 && (
+                                    <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] px-3 pb-1 pt-2">
+                                          Recent
+                                    </p>
+                              )}
+                              {recentChats.map(chat => (
+                                    <div key={chat._id}>
+                                          <div className="relative">
+                                                <button
+                                                      onClick={() => handleSelectChat(chat._id)}
+                                                      className={`
+                                                w-full
+                                                flex
+                                                relative
+                                                items-center
+                                                gap-2
+                                                px-3
+                                                py-2
+                                                pr-10
+                                                rounded-lg
+                                                transition-colors
+                                                ${currentChatId === chat._id
+                                                                  ? "bg-[var(--bg-card)]"
+                                                                  : "hover:bg-[var(--bg-surface-hover)]"
+                                                            }
+    `}
+                                                >
+                                                      <MessageCircle
+                                                            size={14}
+                                                            className="shrink-0 text-[var(--text-muted)]"
+                                                      />
+
+                                                      <span className="flex-1 truncate text-left">
+                                                            {getChatTitle(chat)}
+                                                      </span>
+                                                </button>
+                                                <button
+                                                      onClick={() =>
+                                                            setOpenMenu(
+                                                                  openMenu === chat._id
+                                                                        ? null
+                                                                        : chat._id
+                                                            )
+                                                      }
+                                                      className="
+                                                            absolute
+                                                            right-2
+                                                            top-1/2
+                                                            -translate-y-1/2
+                                                            opacity-100
+                                                            group-hover:opacity-100
+                                                            z-[50]
+                                                            p-1
+                                                            rounded
+                                                            hover:bg-[var(--bg-surface-hover)]
+                                                            "
+                                                >
+                                                      <MoreHorizontal size={16} />
+                                                </button>
+
+                                                {
+                                                      openMenu === chat._id && (
+
+                                                            <div
+                                                                  className="
+                                                            absolute
+                                                            right-2
+                                                            top-[calc(100%+4px)]
+                                                            w-44
+                                                            rounded-lg
+                                                            border
+                                                            border-[var(--border-subtle)]
+                                                            bg-[var(--bg-card)]
+                                                            shadow-2xl
+                                                            z-80
+                                                            "
+                                                            >
+                                                                  <button
+                                                                        onClick={() => {
+                                                                              handlePinAndArchiveChat(chat._id, {
+                                                                                    isPinned: true,
+                                                                                    isArchived: chat.isArchived,
+                                                                              });
+                                                                              setOpenMenu(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[var(--bg-surface-hover)]"
+                                                                  >
+                                                                        <Pin size={15} />
+                                                                        Pin
+                                                                  </button>
+
+                                                                  <button
+                                                                        onClick={() => {
+                                                                              handlePinAndArchiveChat(chat._id, {
+                                                                                    isPinned: chat.isPinned,
+                                                                                    isArchived: chat.isArchived ? false : true
+                                                                              });
+                                                                              setOpenMenu(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[var(--bg-surface-hover)]"
+                                                                  >
+                                                                        <Archive size={15} />
+                                                                        {chat.isArchived ? "Unarchive" : "Archive"}
+                                                                  </button>
+
+                                                                  <button
+                                                                        onClick={() => {
+                                                                              handleDeleteChat(chat._id);
+                                                                              setOpenMenu(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-red-500 hover:bg-red-500/10"
+                                                                  >
+                                                                        <Trash2 size={15} />
+                                                                        Delete
+                                                                  </button>
+
+                                                            </div>
+                                                      )}
+                                          </div>
+                                    </div>
+                              ))}
                         </div>
 
                         {/* Help / Logout */}
                         <div className="flex flex-col gap-1 px-4 mt-4">
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
+                              {/*<button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <HelpCircle size={16} />
                                     Help
-                              </button>
-                              <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
+                              </button>*/}
+                              <button onClick={() => logOutUser()} className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <LogOut size={16} />
                                     Logout
                               </button>
@@ -463,11 +742,12 @@ function Dashboard() {
                                           <Menu size={22} />
                                     </button>
 
-                                    <div className="hidden md:flex items-center gap-6 text-sm">
+                                    {/*<div className="hidden md:flex items-center gap-6 text-sm">
                                           <button className="text-[var(--text-primary)] font-medium border-b-2 border-[var(--accent-primary)] pb-1">Models</button>
                                           <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">API</button>
                                           <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">Enterprise</button>
                                     </div>
+                                    */}
                               </div>
 
                               <div className="flex items-center gap-2 md:gap-4">
@@ -492,17 +772,32 @@ function Dashboard() {
                                     <button className="hidden cursor-pointer sm:inline-flex text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                                           <LayoutGrid size={18} />
                                     </button>
-                                    <button className="cursor-pointer flex items-center gap-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] text-sm font-medium px-3 md:px-4 py-2 rounded-md hover:bg-[var(--accent-primary-hover)] transition-colors">
-                                          <User size={16} className="sm:hidden" />
-                                          <span className="hidden sm:inline">Profile Settings</span>
+                                    <button className="cursor-pointer w-9 h-9 flex items-center justify-center gap-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] text-sm font-medium  py-2 rounded-full hover:bg-[var(--accent-primary-hover)] transition-colors">
+                                          <User size={18} />
                                     </button>
                               </div>
                         </header>
 
-                        {/* ── Scrollable chat area ── */}
+                        {/* ── Scrollable main pane — switches between Chat / All Chats / Archives ── */}
                         <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6">
 
-                              {currentMessages.length === 0 && !isLoading ? (
+                              {activeView === 'archives' ? (
+
+                                    <ArchivesView
+                                          chats={archivedChats}
+                                          getChatTitle={getChatTitle}
+                                          onSelectChat={handleSelectChat}
+                                    />
+
+                              ) : activeView === 'allchats' ? (
+
+                                    <AllChatsView
+                                          chats={chatList}
+                                          getChatTitle={getChatTitle}
+                                          onSelectChat={handleSelectChat}
+                                    />
+
+                              ) : currentMessages.length === 0 && !isLoading ? (
 
                                     /* ── Hero (no messages yet) ── */
                                     <div className="min-h-full flex flex-col items-center justify-center py-8">
@@ -666,7 +961,8 @@ function Dashboard() {
                                                 );
                                           })}
 
-                                          {/* ── Loading bubble (waiting for AI) ── */}
+
+
                                           {isLoading && (
                                                 <div className="flex items-end gap-3 justify-start">
                                                       <div className="shrink-0 w-8 h-8 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--accent-primary)]">
@@ -682,6 +978,7 @@ function Dashboard() {
                                                       </div>
                                                 </div>
                                           )}
+
 
                                           {/* ── Error with retry ── */}
                                           {error && !isLoading && (
@@ -704,8 +1001,8 @@ function Dashboard() {
 
                         </div>
 
-                        {/* ── Input bar — only appears once the chat has started. Sits flush at the bottom, no gradient/shadow divider, tighter padding so it doesn't eat vertical space ── */}
-                        {(currentMessages.length > 0 || isLoading) && (
+                        {/* ── Input bar — only appears in the chat view once a chat has started. ── */}
+                        {activeView === 'chat' && (currentMessages.length > 0 || isLoading) && (
                               <div className="shrink-0 px-4 sm:px-6 pb-4 sm:pb-5">
                                     <div className="max-w-3xl mx-auto">
                                           <div className="flex select-none items-center gap-2 sm:gap-3 bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] focus-within:border-[var(--accent-primary)]/40 rounded-xl px-4 sm:px-5 py-2.5 transition-colors duration-200">

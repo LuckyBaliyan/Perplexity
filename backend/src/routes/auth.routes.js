@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { registerValidator } from "../validators/auth.validator.js";
-import { register, verifyEmail, resendVerificationEmail } from "../controllers/auth.controller.js";
+import { register, verifyEmail, resendVerificationEmail, logOut } from "../controllers/auth.controller.js";
 import { loginValidator } from "../validators/auth.validator.js";
 import { loginController, getMe } from "../controllers/auth.controller.js";
 import { authUser } from "../middlewares/auth.middleware.js";
@@ -47,5 +47,12 @@ authRouter.get("/verify-email", verifyEmail);
  * @access Public
 */
 authRouter.get("/resend-verification-email", resendVerificationEmail);
+
+/**
+ * @route POST /api/auth/logout
+ * @description Logout user
+ * @access Private
+*/
+authRouter.post("/logOut", authUser, logOut);
 
 export default authRouter;

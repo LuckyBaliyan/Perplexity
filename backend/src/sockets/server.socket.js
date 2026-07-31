@@ -24,6 +24,38 @@ export function initSocket(httpServer) {
        */
       io.on("connection", (socket) => {
             console.log(`User Connected: ${socket.id}`);
+
+            socket.on("test-stream", async () => {
+
+                  console.log("Streaming started...");
+
+                  const text =
+                        "Hello Lucky! This message is being streamed one character at a time using Socket.IO.";
+
+                  for (const char of text) {
+
+                        socket.emit("ai-token", char);
+
+                        await new Promise(resolve => setTimeout(resolve, 40));
+                  }
+
+                  socket.emit("ai-end");
+
+                  console.log("Streaming finished.");
+
+            });
+
+
+            // frontend joins its own room
+            socket.on("join", (userId) => {
+                  socket.join(userId);
+                  console.log(`${socket.id} joined room ${userId}`);
+            });
+
+
+            socket.on("disconnect", () => {
+                  console.log(`User Disconnected: ${socket.id}`);
+            });
       });
 }
 

@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { register, login, getMe } from "../services/auth.api";
+import { register, login, getMe, logOut } from "../services/auth.api";
 import { setUser, setLoading, setError, clearError } from "../slices/auth.slice";
 
 export function useAuth() {
@@ -92,9 +92,31 @@ export function useAuth() {
             }
       }
 
+      /**
+       * Handles user logout
+       * @returns {Promise<Object>} - User data
+      */
+      async function handleLogOut() {
+            try {
+
+                  dispatch(setLoading(true));
+                  dispatch(clearError());
+                  const data = await logOut();
+                  dispatch(setUser(null));
+                  return data;
+
+            } catch (error) {
+                  dispatch(setError(error?.response?.data || "Unexpected Error happend!"));
+                  throw error;
+            } finally {
+                  dispatch(setLoading(false));
+            }
+      }
+
       return {
             handleGetMe,
             handleRegister,
-            handleLogin
+            handleLogin,
+            handleLogOut,
       }
 }

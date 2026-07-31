@@ -22,6 +22,7 @@ const grokModel = new ChatGroq({
 const mistralModel = new ChatMistralAI({
       model: "mistral-small-latest",
       apiKey: process.env.MISTRAL_AI_KEY,
+      streaming: true,
 });
 
 /**
@@ -58,7 +59,7 @@ const agent = createAgent({
       model: mistralModel,
       tools: [searchWeb],
       systemMessage: new SystemMessage(`You are a helpful assistant that answers user queries based on the 
-            information you find on the internet`),
+            information you find on the internet with current date`),
 })
 
 
@@ -81,6 +82,29 @@ export async function generateResponse(messages) {
       console.log(response);
 
       return response.messages[response.messages.length - 1].text;
+}
+
+/**
+ * @description Generates a response from the AI model based on the given message.
+ * @param {*} message 
+ * @returns 
+*/
+export async function generateResponseStream(messages) {
+      const formattedMessages = messages.map(msg => {
+            if (msg.role === "user") return new HumanMessage(msg.content);
+            else if (msg.role === "ai") return new AIMessage(msg.content);
+      });
+
+      const stream = agent.streamEvents(
+            {
+                  messages: formattedMessages,
+            },
+            {
+                  version: "v2",
+            }
+      );
+
+      return stream;
 }
 
 /**

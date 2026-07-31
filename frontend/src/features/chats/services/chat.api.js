@@ -59,3 +59,15 @@ export async function deleteChat(chatId) {
       return response.data;
 
 }
+
+/**
+ * @description Mark the specific chat identified by an Id from backend
+ * @param {*} chatId Id of selected chat
+ * @returns 
+*/
+export async function markChat(chatId, payload) {
+
+      const response = await api.patch(`/api/chats/markChat/${chatId}`, payload);
+      return response.data;
+
+}

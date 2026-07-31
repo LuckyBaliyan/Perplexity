@@ -261,3 +261,28 @@ export async function getMe(req, res) {
             }
       })
 }
+
+/**
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ * @description logout user
+ */
+export async function logOut(req, res) {
+      try {
+            res.clearCookie("token");
+
+            return res.status(200).json({
+                  message: "Logged out successfully",
+                  success: true,
+            });
+
+      } catch (error) {
+
+            res.status(500).json({
+                  message: "LogOut Failed!",
+                  success: false,
+                  err: error
+            })
+
+      }
+}
