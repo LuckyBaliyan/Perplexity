@@ -99,7 +99,7 @@ export async function verifyEmail(req, res) {
                   <h1>Account Verified</h1>
                   <p>Hi ${user.username} welcome to perplexity</p>
                   <p>Your account has been verified successfully</p>
-                  <a href="http://localhost:5173/login">Login Here</a>
+                  <a href=${process.env.FRONTEND_URL}>Login Here</a>
                   <p> having problem resend link?</p>
             `
 
@@ -216,7 +216,12 @@ export async function loginController(req, res) {
             username: user.username,
       }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-      res.cookie("token", token);
+      res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,      // HTTPS only
+            sameSite: "none",  // Required for cross-site cookies
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       res.status(200).json({
             message: "Loign Sucessfully",
@@ -269,7 +274,11 @@ export async function getMe(req, res) {
  */
 export async function logOut(req, res) {
       try {
-            res.clearCookie("token");
+            res.clearCookie("token", {
+                  httpOnly: true,
+                  secure: true,
+                  sameSite: "none",
+            });
 
             return res.status(200).json({
                   message: "Logged out successfully",
