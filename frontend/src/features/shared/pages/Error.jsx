@@ -7,8 +7,7 @@ import { useNavigate } from "react-router";
  * @returns React Component
 */
 
-// Update this to match your actual route for resendVerificationEmail.
-const RESEND_VERIFICATION_ENDPOINT = "http://localhost:3000/api/auth/resend-verification-email";
+const RESEND_VERIFICATION_ENDPOINT = `${import.meta.env.BACKEND_URL}/api/auth/resend-verification-email`;
 
 /**
  * Reads the raw error payload coming back from the login / register API

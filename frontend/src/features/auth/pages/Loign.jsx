@@ -121,7 +121,7 @@ export default function LoginPage() {
             // Only run this effect after form submission
             if (submitted) {
                   if (error && error.message != "Account not verified") {
-                        alert(error.message);
+                        console.log(error.message);
                   }
                   else if (error && error.message === "Account not verified") {
                         navigate("/verify-email", { replace: true }); // Navigate to error page if login fails
