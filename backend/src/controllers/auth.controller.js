@@ -55,7 +55,7 @@ export async function register(req, res) {
 
       const user = await userModel.create({ username, email, password });
 
-      await sendVerificationEmail(user);
+      // await sendVerificationEmail(user);
 
       res.status(201).json({
             message: "User registered successfully",
@@ -200,7 +200,7 @@ export async function loginController(req, res) {
             })
       }
 
-      if (!user.verified) {
+      /*if (!user.verified) {
             return res.status(400).json({
                   message: "Account not verified",
                   success: false,
@@ -209,7 +209,7 @@ export async function loginController(req, res) {
                         email: user.email
                   }
             })
-      }
+      }*/
 
       const token = jwt.sign({
             id: user._id,
