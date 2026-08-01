@@ -158,8 +158,8 @@ export default function Register() {
             });
 
             if (data.success) {
-                  alert(data.message + `Please verify your account via link send 
-                        on registered email! before logging in!`);
+                  /*alert(data.message + `Please verify your account via link send 
+                        on registered email! before logging in!`);*/
                   cleanUp();
                   navigate("/login", { replace: true });
             }
