@@ -6,7 +6,7 @@ import axios from "axios";
  * @param {boolean} withCredentials - Whether to include credentials in the request
  */
 const api = axios.create({
-      baseURL: "http://localhost:3000",
+      baseURL: import.meta.env.VITE_BACKEND_URL,
       withCredentials: true,
 });
 

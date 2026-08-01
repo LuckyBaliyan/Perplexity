@@ -21,7 +21,7 @@ app.use(express.json());
  * Allows the frontend (http://localhost:5173) to make requests to the backend.
 */
 app.use(cors({
-      origin: "http://localhost:5173",
+      origin: process.env.FRONTEND_URL,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }));

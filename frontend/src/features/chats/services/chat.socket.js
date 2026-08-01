@@ -15,7 +15,7 @@ export const initializeSocketConnection = (userId) => {
 
       if (socket) return socket;
 
-      socket = ioClient("http://localhost:3000", {
+      socket = ioClient(import.meta.env.VITE_BACKEND_URL, {
             withCredentials: true,
       });
 

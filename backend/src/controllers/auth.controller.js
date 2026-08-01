@@ -27,9 +27,9 @@ async function sendVerificationEmail(user) {
             text: "Please verify your account by clicking on the link",
             html: `
                   <h1>Account Activation</h1>
-                  <p>Hi ${user.username} welcome to perplexity</p>
+                  <p>Hi ${user.username} welcome to perplexor Ai</p>
                   <p>Please verify your account by clicking on the link</p>
-                  <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify email</a>
+                  <a href="${process.env.BACKEND_URL}/api/auth/verify-email?token=${emailVerificationToken}">Verify email</a>
             `
       });
 }

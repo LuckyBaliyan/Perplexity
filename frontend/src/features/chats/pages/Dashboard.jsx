@@ -451,10 +451,12 @@ function Dashboard() {
                                     <Archive size={16} />
                                     Archives
                               </button>
+                              {/*
                               <button className="cursor-pointer flex items-center gap-3 px-3 py-2 rounded-md text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors">
                                     <Settings size={16} />
                                     Settings
                               </button>
+                              */}
                         </nav>
 
                         {/* pinned chat section */}
