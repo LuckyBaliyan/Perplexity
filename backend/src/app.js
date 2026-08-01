@@ -20,8 +20,20 @@ app.use(express.json());
  * Enables Cross-Origin Resource Sharing (CORS).
  * Allows the frontend (http://localhost:5173) to make requests to the backend.
 */
+const allowedOrigins = [
+      "http://localhost:5173",
+      "https://perplexorai.vercel.app",
+      "https://perplexorai-git-main-lucky-baliyans-projects.vercel.app",
+];
+
 app.use(cors({
-      origin: process.env.FRONTEND_URL,
+      origin(origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                  callback(null, true);
+            } else {
+                  callback(new Error("Not allowed by CORS"));
+            }
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }));
